@@ -1,0 +1,17 @@
+.badge{
+    position: relative;
+    display: inline-block;
+    padding: 0 7px;
+}
+.badge img{
+    width: 21px;
+    position: relative;
+}
+.badge p{
+    position: absolute;
+    color: var(--color-white);
+    font-size: 10px;
+    top: 7px;
+    left: 15px;
+    margin: 0;
+}

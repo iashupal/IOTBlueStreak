@@ -1,0 +1,20 @@
+{
+    "dev": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-bluestreakiot-dev-160501-authRole",
+            "UnauthRoleArn": "arn:aws:iam::970691567234:role/amplify-bluestreakiot-dev-160501-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::970691567234:role/amplify-bluestreakiot-dev-160501-authRole",
+            "Region": "us-east-2",
+            "DeploymentBucketName": "amplify-bluestreakiot-dev-160501-deployment",
+            "UnauthRoleName": "amplify-bluestreakiot-dev-160501-unauthRole",
+            "StackName": "amplify-bluestreakiot-dev-160501",
+            "StackId": "arn:aws:cloudformation:us-east-2:970691567234:stack/amplify-bluestreakiot-dev-160501/3647e8d0-b086-11ea-a06e-0a569e9f7d94",
+            "AmplifyAppId": "d3dzi3o697acj6"
+        },
+        "categories": {
+            "auth": {
+                "bluestreakiot38f3a194": {}
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+.tank_details {
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 2fr 1fr;
+    grid-gap: 10px;
+}
+.tank_details .tank_head{
+    font-size: 16px;
+    font-weight: 600;
+}
+.tank_details .tank_head:first-child{
+    color: var(--color-primary);
+}
+.tank_details .ant-divider-vertical{
+    border-left: 1px solid var(--color-orange);
+}
+.tank_details .tank_head:last-child{
+    color: var(--color-eclipse);
+}

@@ -1,0 +1,20 @@
+.tab_wrapper .ant-menu {
+  line-height: 1.5;
+}
+.leftGateway_desc {
+  padding: 5px 12px;
+  color: var(--color-primary);
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  font-weight: 600;
+}
+.leftGateway_inrdesc {
+  padding: 5px 0px;
+  color: var(--color-primary);
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+}

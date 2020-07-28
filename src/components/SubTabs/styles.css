@@ -1,0 +1,73 @@
+.subtabContainer {
+  padding: 5px 5px;
+  color: var(--color-primary);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+}
+.subtabContainer p {
+  display: inline-block;
+  padding-left: 10px;
+  margin: 0;
+  font-weight: 600;
+  font-size: 13px;
+  word-wrap: break-word;
+  word-break: keep-all;
+}
+.activeSubTab {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-radius: 2px;
+  margin: 3px auto;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 10px 0 5px;
+  position: relative;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  /* overflow: hidden; */
+}
+.activeSubTab::after {
+  content: "";
+  width: 30px;
+  height: 40px;
+  border-left: solid 20px var(--color-primary);
+  border-bottom: solid 19px transparent;
+  border-top: solid 19px transparent;
+  position: absolute;
+  right: -28px;
+  top: 0px;
+}
+.tab_alerts {
+  float: right;
+}
+.tab_alerts span {
+  padding-right: 10px;
+}
+.tab_alerts span p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+.tab_alerts span i {
+  color: var(--color-orange);
+  font-size: 12px;
+}
+.tab_content.subtab_content {
+  width: 100%;
+  padding: 5px 10px;
+  background-color: lightblue;
+}
+.tab_content.subtab_content p {
+  font-size: 13px;
+}
+.sub__inrtab--branch {
+  padding: 5px 0;
+}
+
+.sub__inrtab--branch i {
+  display: none;
+}

@@ -1,0 +1,49 @@
+.tabContainer {
+  padding: 5px 20px;
+  color: var(--color-white);
+  font-size: 16px;
+  cursor: pointer;
+}
+.tabContainer p {
+  display: inline-block;
+  padding-left: 10px;
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+}
+.activeTab {
+  color: var(--color-primary);
+  background-color: white;
+  border-radius: 2px;
+  margin: 3px auto;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 10px 0 20px;
+  position: relative;
+}
+.activeTab::after {
+  content: "";
+  width: 30px;
+  height: 40px;
+  border-left: solid 20px var(--color-white);
+  border-bottom: solid 19px transparent;
+  border-top: solid 19px transparent;
+  position: absolute;
+  right: -29px;
+  top: 0px;
+}
+.tab_alerts {
+  float: right;
+}
+.tab_alerts span {
+  padding: 0 10px;
+}
+.tab_alerts span p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+.tab_alerts span i {
+  color: var(--color-orange);
+  font-size: 12px;
+}

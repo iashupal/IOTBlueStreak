@@ -1,0 +1,164 @@
+.progressBar_graph {
+  width: 145px;
+  height: 145px;
+  position: relative;
+  cursor: pointer;
+}
+.CircularProgressbar .CircularProgressbar-trail {
+  stroke: var(--color-lightgrey);
+}
+.CircularProgressbar .CircularProgressbar-path {
+  transition: none;
+  stroke-width: 7px;
+  stroke-linecap: square;
+  /* stroke: pink; */
+}
+.graphStroke.CircularProgressbar .CircularProgressbar-path {
+  stroke: var(--color-parrot);
+}
+.graphStroke.tankBelow30.CircularProgressbar .CircularProgressbar-path {
+  stroke: var(--color-yellowish);
+}
+.graphStroke.tankBelow10.CircularProgressbar .CircularProgressbar-path {
+  stroke: var(--color-ruby);
+}
+.graphStroke.bulkStroke.CircularProgressbar .CircularProgressbar-path {
+  stroke: var(--color-primary);
+}
+.graphStroke.clientStroke.CircularProgressbar .CircularProgressbar-path {
+  stroke: var(--color-primary);
+}
+.progressbar_inr--info {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  top: 0;
+  margin: 0 auto;
+  text-align: center;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.graph_content {
+  width: 65%;
+  margin: 0 auto;
+}
+.graph_content img {
+  width: 20px;
+}
+.graph_content h3 {
+  display: inline-block;
+  font-size: 32px;
+  color: var(--color-grey);
+  margin: 0;
+  font-weight: 600;
+  line-height: 0.75;
+}
+.graph_content h4 {
+  display: inline-block;
+  font-size: 15px;
+  color: var(--color-grey);
+  margin: 0;
+  font-weight: 600;
+}
+.graph_value {
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 2fr;
+  align-items: center;
+  justify-content: center;
+  width: 85%;
+  margin: 0 auto;
+}
+.graph_content p.graph__client--tank {
+  font-size: 15px;
+  color: var(--color-grey);
+}
+
+/* animatedgraph */
+.ant-divider.ant-divider-horizontal {
+  margin: 3px 0;
+  border-top: 1px solid #979797;
+}
+p.graph_status {
+  font-size: 10px;
+  color: var(--color-grey);
+}
+/* animated inventory */
+p.inventory_status {
+  font-size: 10px;
+  color: var(--color-primary);
+}
+/* graphstyle */
+.graphStyle {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+.graphStyle .graph_content {
+  width: 80%;
+}
+.graphStyle .graph_content img {
+  width: 18px;
+  margin: 0 auto;
+}
+.graphDesignStyle {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 15px;
+}
+/* media query css code  */
+@media screen and (max-width: 1640px) {
+  .progressBar_graph {
+    width: 135px;
+    height: 135px;
+  }
+  .graph_content h3 {
+    font-size: 26px;
+  }
+}
+
+@media screen and (max-width: 1558px) {
+  .progressBar_graph {
+    width: 125px;
+    height: 125px;
+  }
+  .graph_content h3 {
+    font-size: 22px;
+  }
+}
+@media screen and (max-width: 1440px) {
+  .progressBar_graph {
+    width: 115px;
+    height: 115px;
+  }
+  .graph_content p.graph__client--tank {
+    font-size: 14px;
+  }
+}
+@media screen and (max-width: 1420px) {
+  .graph_content h3 {
+    font-size: 18px;
+  }
+  .graph_content img {
+    width: 16px;
+  }
+  .graph_content h4 {
+    font-size: 12px;
+  }
+}
+@media screen and (max-width: 1330px) {
+  .graph_content p.graph__client--tank {
+    font-size: 11px;
+  }
+  .graph_content h3 {
+    line-height: 2.75;
+  }
+  .progressBar_graph {
+    width: 105px;
+    height: 100px;
+  }
+}

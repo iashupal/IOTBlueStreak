@@ -1,0 +1,275 @@
+"ISO-8601 format time string"
+scalar DateTime
+
+enum SortDirection {
+  asc
+  desc
+}
+
+enum TankCapacityUnits {
+  lb
+  gal
+}
+
+type Query {
+  hello: String,    # For testing
+  loggedInUser: User!,  # The currently logged in user
+
+  "Retrieve a location by id or external_id"
+  locationEntry(id: Int, externalId: String, path: String): LocationEntry,
+
+  "Retrieve a tank by id or external_id"
+  tank(id: Int, externalId: String): Tank
+
+}
+
+QueryFilterEntry format:
+{ 
+  "property": 
+  { 
+    "op": "",
+     "v": "" 
+  }
+}
+
+property: The property to filter on
+op: Operation.
+  ">", "<", ">=", "<=", "==", '!=", "isNull", "isNotNull"
+value: The value to compare against
+scalar QueryFilterEntry
+
+type User {
+  id: String!,
+  email: String,
+  groups: [String],
+  homeLocation: LocationEntry
+}
+
+Possible filter/sort fields for tanks()
+
+'description'
+'id'
+'timestamp'
+'temperatureCelsius'
+'batteryVoltage'
+'levelPercent'
+'rawQuality'
+'levelGallons'
+'refillPotentialGallons'
+'capacityGallons'
+'isBulk'
+
+interface LocationEntry {
+  id: Int!,
+  path: String!,
+  externalId: String,
+  parent: LocationEntry,
+  description: String,
+  hidden: Boolean,
+  tanks(first: Int, last: Int, 
+    before: String, after: String,
+    sortBy: TankSortProperty, sortDirection: SortDirection,
+    filter: [QueryFilterEntry]
+    recursive: Boolean
+  ): TanksConnection
+
+}
+
+type PageInfo {
+  hasNextPage: Boolean!,
+  hasPreviousPage: Boolean!,
+  startCursor: String,
+  endCursor: String
+}
+
+type LocationEntryEdge {
+  cursor: String!,
+  node: LocationEntry!
+}
+
+type LocationEntriesConnection {
+  totalCount: Int!,
+  edges: [LocationEntryEdge],
+  pageInfo: PageInfo!
+}
+
+enum LocationEntrySortProperty {
+  description
+  id
+}
+
+enum TankSortProperty {
+  description
+  id
+  timestamp
+  temperatureCelsius
+  batteryVoltage
+  levelPercent
+  rawQuality
+  levelGallons
+  refillPotentialGallons
+    
+}
+
+enum TankReadingsSortProperty {
+  id
+  timestamp
+  temperatureCelsius
+  batteryVoltage
+  levelPercent
+  rawQuality
+  levelGallons
+  refillPotentialGallons
+}
+
+type Alarm {
+  alarmType: String!,
+  priority: Int!,
+  description: String,
+  triggeredAt: DateTime,
+  clearedAt: DateTime,
+  alarming: Boolean!
+}
+
+sort fields for sublocations()
+
+'description'
+'id'
+
+type Location implements LocationEntry {
+  id: Int!,
+  externalId: String,
+  path: String!,
+  parent: LocationEntry,
+  description: String,
+  hidden: Boolean,
+  tanks(first: Int, last: Int, 
+    before: String, after: String,
+    sortBy: TankSortProperty, sortDirection: SortDirection,
+    filter: [QueryFilterEntry]
+    recursive: Boolean
+  ): TanksConnection
+  sublocations(first: Int, last: Int, 
+    before: String, after: String,
+    sortBy: LocationEntrySortProperty, sortDirection: SortDirection,
+    recursive: Boolean
+  ): LocationEntriesConnection
+}
+
+type TankEdge {
+  cursor: String!,
+  node: Tank!
+}
+
+type TanksAggregate {
+  avg_levelPercent: Float!
+  avg_capacityGallons: Float!
+  avg_refillPotentialGallons: Float!
+  avg_levelGallons: Float!
+  sum_capacityGallons: Float!
+  sum_refillPotentialGallons: Float!
+  sum_levelGallons: Float!
+}
+
+type TanksConnection {
+  totalCount: Int!,
+  edges: [TankEdge],
+  pageInfo: PageInfo!,
+  aggregate: TanksAggregate!
+}
+
+type GatewayLocation implements LocationEntry {
+  id: Int!,
+  externalId: String,
+  path: String!,
+  parent: LocationEntry,
+  description: String,
+  hidden: Boolean,
+  tanks(first: Int, last: Int, 
+      before: String, after: String,
+      sortBy: TankSortProperty, sortDirection: SortDirection,
+      filter: [QueryFilterEntry],
+      recursive: Boolean
+  ): TanksConnection
+  
+  gateway: Gateway,
+  alarms(types: [String!]): Alarm
+} 
+
+type Sensor {
+  id: String!,
+  serialNumber: String,
+  pairedTank: Tank,
+  lastReportTimestamp: DateTime
+} 
+
+type Gateway {
+  serialNumber: String!,
+  pairedGatewayLocation: GatewayLocation,
+  lastReportTimestamp: DateTime,
+  lastSensorTimestamp: DateTime,
+  mostRecentTimestamp: DateTime
+}
+
+type TankReadingEdge {
+  cursor: String!,
+  node: TankReading!
+}
+
+type TankReadingsAggregate {
+  avg_levelPercent: Float!
+  avg_refillPotentialGallons: Float!
+  avg_levelGallons: Float!
+  sum_refillPotentialGallons: Float!
+  sum_levelGallons: Float!
+}
+
+
+type TankReadingsConnection {
+  totalCount: Int!,
+  edges: [TankReadingEdge],
+  pageInfo: PageInfo!,
+  aggregate: TankReadingsAggregate
+}
+
+type Tank {
+  id: Int!,
+  externalId: String,
+  specifications: TankSpecifications,
+  parent: GatewayLocation!,
+  description: String,
+  latestReading: TankReading,
+  readings(first: Int, last: Int, 
+      before: String, after: String,
+      sortBy: TankReadingsSortProperty, sortDirection: SortDirection,
+      filter: [QueryFilterEntry]
+      recursive: Boolean
+  ): TankReadingsConnection
+  sensor: Sensor,
+  hidden: Boolean!,
+  typeTags: [String],
+  isBulk: Boolean!
+}
+
+type TankReading {
+  id: ID!,
+  sensor: Sensor!,
+  gateway: Gateway!,
+  tank: Tank,
+  timestamp: DateTime!,
+  temperatureCelsius: Float,
+  batteryVoltage: Float,
+  levelPercent: Float,
+  rawQuality: Int,
+  levelGallons: Float,
+  refillPotentialGallons: Float
+}
+
+type TankSpecifications {
+  vertical: Boolean,
+  heightMeters: Float,
+  widthMeters: Float,
+  capacity: Float,
+  capacityUnits: TankCapacityUnits,
+  capacityGallons: Float,
+}

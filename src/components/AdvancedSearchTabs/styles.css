@@ -1,0 +1,16 @@
+Button.ant-btn-lg.filter_btn {
+  font-size: 14px;
+  border: 0;
+  border-radius: 4px;
+  font-weight: 500;
+  background-color: var(--color-brightGray);
+  color: var(--color-eclipse);
+  width: 100%;
+  position: relative;
+}
+
+Button.ant-btn-lg.activeAdvancedTab {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  width: 100%;
+}

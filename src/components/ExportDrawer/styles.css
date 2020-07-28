@@ -1,0 +1,34 @@
+.export__data--content {
+  width: 100%;
+  margin: 5px auto;
+  position: relative;
+  border: 1px solid var(--color-greyiesh);
+  border-radius: 5px;
+  padding: 14px;
+  /* text-align: center; */
+  font-size: 12px;
+  color: var(--color-eclipse);
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+.export__data--content .ant-checkbox-wrapper {
+  width: 100%;
+}
+.export__data--content .ant-checkbox + span {
+  padding-right: 8px;
+  padding-left: 8px;
+  text-align: center;
+  width: 90%;
+  position: absolute;
+}
+.saved_searches .ant-checkbox-wrapper {
+  width: 100%;
+}
+.saved_searches .ant-picker.ant-picker-range {
+  width: 90%;
+  border: 1px solid transparent;
+}
+.saved_searches .ant-picker-input > input {
+  font-size: 13px;
+  font-weight: 600;
+}

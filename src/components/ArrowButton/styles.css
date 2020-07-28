@@ -1,0 +1,12 @@
+i.arrow_btn{
+    background-color: var(--color-greyiesh);
+    border-radius: 50%;
+    padding: 10px 14px;
+    font-size: 21px;
+    color: white;
+    position: absolute;
+    left: 49%;
+    bottom: 3px;
+    cursor: pointer;
+    z-index: 1;
+}

@@ -1,0 +1,29 @@
+.App {
+ width: 100%;
+ margin: 0 auto;
+ position: relative;
+ font-family: 'AvenirNextTPro-Regular';
+ font-style: normal;
+ overflow-x: hidden;
+ scroll-behavior: smooth;
+}
+
+@font-face{
+    font-family: 'AvenirNextTPro-Bold';
+    src: url('./assets/avenir-next/AvenirNextLTPro-Bold.otf');
+    font-style: normal;
+    font-weight: normal;
+}
+@font-face{
+    font-family: 'AvenirNextTPro-lt';
+    src: url('./assets/avenir-next/AvenirNextLTPro-It.otf');
+    font-style: normal;
+    font-weight: normal;
+}
+@font-face{
+    font-family: 'AvenirNextTPro-Regular';
+    src: url('./assets/avenir-next/AvenirNextLTPro-Regular.otf');
+    font-style: normal;
+    font-weight: normal;
+}
+

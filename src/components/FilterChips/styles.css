@@ -1,0 +1,33 @@
+.filter__selected {
+  font-size: 14px;
+  border: 0;
+  border-radius: 4px;
+  font-weight: 500;
+  background-color: var(--color-brightGray);
+  color: var(--color-eclipse);
+  width: 100%;
+  text-align: center;
+  line-height: 47px;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.filter__selected img {
+  width: 16px;
+  position: absolute;
+  z-index: 1;
+  right: 12px;
+  top: 15px;
+}
+.activeSelectedTag {
+  background-color: #979797;
+}
+.anticon.minusIcon {
+  width: 16px;
+  position: absolute;
+  z-index: 1;
+  right: 12px;
+  top: 15px;
+  color: var(--color-primary);
+}

@@ -1,0 +1,29 @@
+body {
+  font-family: "Rajdhani";
+  --color-primary: #215caa;
+  --color-white: #ffffff;
+  --color-black: #333333;
+  --color-grey: #6d7278;
+  --color-skyblue: #48cdff;
+  --color-calcite: #ffc89f;
+  --color-lightgray: #a5b5c4;
+  --color-gray: #a5b5c4;
+  --color-orange: #ff6d00;
+  --color-greyiesh: #bebebe;
+  --color-parrot: #90c822;
+  --color-yellowish: #f7b500;
+  --color-red: #e02020;
+  --color-lightgrey: #d8d8d8;
+  --color-fadedOrange: #ffc89f;
+  --color-fadeGray: #f1f1f1;
+  --color-eclipse: #3a3a3a;
+  --color-citrine: #f7b500;
+  --color-silver: #979797;
+  --color-brightGray: #ececec;
+  --color-mercury: #e6e6e6;
+  --color-whiteSmoke: #f2f2f2;
+  --color-parrot: #90c822;
+  --color-ruby: #e02020;
+  --color-blue: #4591f6;
+  --container-width: 90%;
+}

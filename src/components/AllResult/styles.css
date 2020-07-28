@@ -1,0 +1,14 @@
+.vertrax_result {
+  position: relative;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+}
+.vertrax_result p {
+  display: inline-block;
+  color: var(--color-primary);
+  font-size: 16px;
+  line-height: 22px;
+  padding-left: 20px;
+  margin: 0;
+}

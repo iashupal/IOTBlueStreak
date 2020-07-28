@@ -1,0 +1,38 @@
+.savecard_container{
+    width: 100%;
+    margin: 15px auto;
+    position: relative;
+    border: 1px solid var(--color-silver);
+    border-radius: 5px;
+}
+.savecard_header{
+    background-color: #EDF9FF;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 5px;
+    height: 48px;
+    line-height: 48px;
+}
+.savecard_header p{
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-eclipse);
+    margin: 0;
+    letter-spacing: 1.2px;
+}
+.img_wrapper{
+    position: absolute;
+    right: 20px;
+    top: 0px;
+}
+.img_wrapper img:first-child{
+    width: 15px;
+    cursor: pointer;
+}
+.img_wrapper img:last-child{
+    width: 5px;
+    margin-left: 13px;
+    cursor: pointer;
+}

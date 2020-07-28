@@ -1,0 +1,10 @@
+{
+	"auth": {
+		"bluestreakiot38f3a194": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": [],
+			"customAuth": false
+		}
+	}
+}
