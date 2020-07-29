@@ -347,10 +347,10 @@ class MainLayout extends Component {
     });
   }
 
-  handleGraphicClick = () => {
-    console.log("tank id------------------------", tankId);
-    this.setState((tankId = this.state.tankId));
-  };
+  // handleGraphicClick = () => {
+  //   console.log("tank id------------------------", tankId);
+  //   this.setState((tankId = this.state.tankId));
+  // };
   // handleGraphFilter = (tankId) => {
   //   this.setState({ filterTableFromGraph: tankId });
   //   console.log("filterTable from graph", this.state.filterTableFromGraph);

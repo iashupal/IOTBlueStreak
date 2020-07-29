@@ -416,6 +416,7 @@ class ClientHistoryTable extends Component {
         // this.state.newEndDate
       )
     ) {
+      console.log(this.state.endDate,"I am here ----<")
       this.props.updateParent(
         filtercondition,
         this.state.startDate,
