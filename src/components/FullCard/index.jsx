@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useState } from "react";
+import React, { Fragment, useState } from "react";
 import Heading from "../Heading";
 import ContentCard from "../ContentCard";
 import dropGreen from "../../assets/images/drop-green.png";
@@ -20,6 +20,8 @@ import { gql } from "apollo-boost";
 import { Query } from "react-apollo";
 import { useQuery } from "@apollo/react-hooks";
 import Loader from "../Loader";
+import { set } from "lodash";
+import { useEffect } from "react";
 const userId = localStorage.getItem("userId");
 let totalGatewayGraphs = gql`
   query graphsgraphsData($id: Int) {
@@ -37,7 +39,10 @@ let totalGatewayGraphs = gql`
       }
       tanksBelow30: tanks(
         recursive: true
-        filter: [{ levelPercent: { op: "<", v: 0.30 } }]
+        filter: [
+          { levelPercent: { op: "<", v: 0.30 } }
+          { levelPercent: { op: ">=", v: 0.10 } }
+        ]
       ) {
         totalCount
       }
@@ -96,7 +101,10 @@ let totalGraphs = gql`
       }
       tanksBelow30: tanks(
         recursive: true
-        filter: [{ levelPercent: { op: "<", v: 0.30 } }]
+        filter: [
+          { levelPercent: { op: "<", v: 0.30 } }
+          { levelPercent: { op: ">=", v: 0.10 } }
+        ]
       ) {
         totalCount
       }
@@ -157,14 +165,13 @@ let totalGraphs = gql`
 function FullCard({
   selectedTank,
   selectedTypeGateway,
-  fetchGraphValue,
-  // handleGraphClick,
-  props,
+  handleGraphTankClick,
+  parentCallBack,
 }) {
-  const [tankCount] = useState("");
   const tankId = selectedTank;
   let finalGraph;
   const selectedGateway = selectedTypeGateway;
+  const { gatewayPath, setGatewayPath } = useState(0);
   console.log("selectedGateway", selectedGateway);
   if (selectedGateway == "GatewayLocation") {
     finalGraph = totalGatewayGraphs;
@@ -190,16 +197,36 @@ function FullCard({
   console.log("tank", graphsData.locationEntry);
   console.log("offlineGateway", graphsData.locationEntry.offlineGateways);
   if (errorGraphs) return console.log("Failed to fetch");
-  const handleGraphClick = () => {
-    console.log(tankId);
-  };
-  // const handleGraphClick = useCallback(fetchGraphValue(tankCount));
-  // const handleGraphClick = (tankId) => {
-  //   console.log("tank id", tankId);
-  //   props.handleGraphFilter(tankId);
-  //   console.log(tankId);
-  // };
-  // const handleGraphClick = useCallback(setTankId("yes"));
+  console.log(
+    "path full chart color",
+    Math.round(
+      ((graphsData.locationEntry.totalGateways.totalCount -
+        graphsData.locationEntry.offlineGateways.totalCount) /
+        graphsData.locationEntry.totalGateways.totalCount) *
+        100
+    )
+  );
+  console.log(
+    "offline %",
+    Math.round(
+      (graphsData.locationEntry.offlineGateways.totalCount * 100) /
+        graphsData.locationEntry.totalGateways.totalCount
+    )
+  );
+  console.log(
+    Math.round(
+      (graphsData.locationEntry.offlineGateways.totalCount * 100) /
+        graphsData.locationEntry.totalGateways.totalCount
+    )
+  );
+  // useEffect(() => {
+  //   const progressGatewayPath =
+  //     ((graphsData.locationEntry.totalGateways.totalCount -
+  //       graphsData.locationEntry.offlineGateways.totalCount) /
+  //       graphsData.locationEntry.totalGateways.totalCount) *
+  //     100;
+  //   setGatewayPath(progressGatewayPath);
+  // }, [setGatewayPath]);
   return (
     <div>
       <Fragment>
@@ -239,10 +266,9 @@ function FullCard({
                     easingFunction={easeQuadInOut}
                     image={dropGreen}
                     percntgStatus="above 30%"
-                    // onClick={() => {
-                    //   handleGraphClick(tankId);
-                    // }}
-                    onClick={handleGraphClick}
+                    onClick={() => {
+                      parentCallBack("Above 30%");
+                    }}
                   />
                   <AnimatedTank
                     graphStyle
@@ -259,7 +285,9 @@ function FullCard({
                     easingFunction={easeQuadInOut}
                     image={dropYellow}
                     percntgStatus="below 30%"
-                    // onClick={this.handleClick}
+                    onClick={() => {
+                      parentCallBack("Below 30%");
+                    }}
                   />
                   <AnimatedTank
                     graphStyle
@@ -276,7 +304,9 @@ function FullCard({
                     easingFunction={easeQuadInOut}
                     image={dropRed}
                     percntgStatus="below 10%"
-                    // onClick={this.handleClick}
+                    onClick={() => {
+                      parentCallBack("Below 10%");
+                    }}
                   />
                 </div>
               </div>,
@@ -300,6 +330,21 @@ function FullCard({
                       percentage={
                         graphsData
                           ? graphsData.locationEntry
+                            ? graphsData.locationEntry.totalGateways
+                              ? Math.round(
+                                  (graphsData.locationEntry.offlineGateways
+                                    .totalCount *
+                                    100) /
+                                    graphsData.locationEntry.totalGateways
+                                      .totalCount
+                                )
+                              : 0
+                            : 0
+                          : 0
+                      }
+                      count={
+                        graphsData
+                          ? graphsData.locationEntry
                             ? graphsData.locationEntry.offlineGateways
                               ? graphsData.locationEntry.offlineGateways
                                   .totalCount
@@ -307,7 +352,21 @@ function FullCard({
                             : 0
                           : 0
                       }
-                      // percentage={}
+                      pathColor={
+                        graphsData.locationEntry.offlineGateways.totalCount !=
+                        null
+                          ? Math.round(
+                              (graphsData.locationEntry.offlineGateways
+                                .totalCount *
+                                100) /
+                                graphsData.locationEntry.totalGateways
+                                  .totalCount
+                            )
+                            ? "var(--color-red)"
+                            : "var(--color-parrot)"
+                          : "transparent"
+                      }
+                      strokeColor="gatewayStroke"
                       duration={1.4}
                       easingFunction={easeQuadInOut}
                       image={broadcastTowerRed}
@@ -336,12 +395,57 @@ function FullCard({
                       percentage={
                         graphsData
                           ? graphsData.locationEntry
+                            ? graphsData.locationEntry.totalGateways
+                              ? Math.round(
+                                  (graphsData.locationEntry.offlineTanks
+                                    .totalCount *
+                                    100) /
+                                    graphsData.locationEntry.totalTanks
+                                      .totalCount
+                                )
+                              : 0
+                            : 0
+                          : 0
+                      }
+                      count={
+                        graphsData
+                          ? graphsData.locationEntry
                             ? graphsData.locationEntry.offlineTanks
                               ? graphsData.locationEntry.offlineTanks.totalCount
                               : 0
                             : "0"
                           : "0"
                       }
+                      trailColor={
+                        graphsData.locationEntry.offlineTanks.totalCount != null
+                          ? graphsData.locationEntry.totalTanks.totalCount
+                            ? "var(--color-parrot)"
+                            : "transparent"
+                          : 0
+                      }
+                      pathColor={
+                        graphsData.locationEntry.offlineTanks.totalCount != null
+                          ? Math.round(
+                              (graphsData.locationEntry.offlineTanks
+                                .totalCount *
+                                100) /
+                                graphsData.locationEntry.totalTanks.totalCount
+                            )
+                            ? "var(--color-red)"
+                            : "transparent"
+                          : 0
+                      }
+                      // pathColor={
+                      //   graphsData.locationEntry.offlineTanks.totalCount != null
+                      //     ? Math.round(
+                      //         graphsData.locationEntry.totalTanks.totalCount -
+                      //           graphsData.locationEntry.offlineTanks.totalCount
+                      //       )
+                      //       ? "var(--color-parrot)"
+                      //       : "var(--color-transparent)"
+                      //     : 0
+                      // }
+                      strokeColor="gatewayStroke"
                       duration={1.4}
                       easingFunction={easeQuadInOut}
                       image={wifiRed}
@@ -375,8 +479,11 @@ function FullCard({
                     <AnimatedInventory
                       percentage={
                         graphsData.locationEntry
-                          ? graphsData.locationEntry.bulk.aggregate
-                              .avg_levelPercent
+                          ? (graphsData.locationEntry.bulk.aggregate
+                              .sum_levelGallons /
+                              graphsData.locationEntry.bulk.aggregate
+                                .sum_capacityGallons) *
+                            100
                           : "0"
                       }
                       duration={1.4}
@@ -398,10 +505,16 @@ function FullCard({
                     </p>
                     <AnimatedInventory
                       percentage={
-                        graphsData.locationEntry
+                        graphsData.locationEntry != null
                           ? graphsData.locationEntry.client.aggregate
-                              .avg_levelPercent
-                          : "0"
+                              .sum_levelGallons === 0
+                            ? 0
+                            : (graphsData.locationEntry.client.aggregate
+                                .sum_levelGallons /
+                                graphsData.locationEntry.client.aggregate
+                                  .sum_capacityGallons) *
+                              100
+                          : 0
                       }
                       strokeColor="clientStroke"
                       count={

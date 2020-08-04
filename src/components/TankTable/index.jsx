@@ -1,7 +1,9 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import { Table, Progress, Popover, Checkbox, Button } from "antd";
+import ResizableAntdTable from "resizable-antd-table";
 import { Link, withRouter } from "react-router-dom";
 import ContentCard from "../ContentCard";
+import moment from "moment";
 import Badge from "../Badge";
 import ReactDragListView from "react-drag-listview";
 import Loader from "../../components/Loader";
@@ -22,6 +24,8 @@ import { gql } from "apollo-boost";
 import { Query } from "react-apollo";
 import { data } from "jquery";
 import lodash from "lodash";
+import { Mutation } from "react-apollo";
+//import gql from 'graphql-tag'
 
 const userId = localStorage.getItem("userId");
 
@@ -147,6 +151,7 @@ class TankTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      saveFiler: {},
       formVisible: false,
       exportVisibleDrawer: false,
       docsCount: 10,
@@ -155,7 +160,7 @@ class TankTable extends Component {
       selectionEnabled: false,
       selectedTankId: "",
       counter: 0,
-      pageSize: 10,
+      pageSize: 50,
       currentPage: 1,
       checked: false,
       pageData: {},
@@ -165,7 +170,7 @@ class TankTable extends Component {
         {
           title: "Tank Number",
           ellipsis: true,
-          width: "10%",
+          width: "11%",
           key: "tanksDetail.node.id",
           dataIndex: "id",
           sorter: (a, b) => {
@@ -188,7 +193,7 @@ class TankTable extends Component {
         {
           title: "Tank Name",
           ellipsis: true,
-          width: "10%",
+          width: "12%",
           key: "tanksDetail.node.description",
           dataIndex: "Name",
           sorter: (a, b) => {
@@ -224,7 +229,7 @@ class TankTable extends Component {
               return 1;
             }
           },
-          width: "10%",
+          width: "11%",
 
           render: (progress, record) => (
             <span>
@@ -289,12 +294,6 @@ class TankTable extends Component {
                 if (error) {
                   return <div>Error</div>;
                 } else if (data) {
-                  console.log("alert id", this.props.selectedTankId);
-                  console.log("alerts ", data);
-                  console.log(
-                    "medium alarm",
-                    data.locationEntry.tanks.aggregate.sum_highAlarmCnt
-                  );
                   return (
                     data &&
                     data.locationEntry && (
@@ -392,7 +391,7 @@ class TankTable extends Component {
           title: "Commodity",
           sortDirections: ["descend", "ascend"],
           dataIndex: "propane",
-          width: "10%",
+          width: "9%",
           render: (text, record) => <span>Propane</span>,
         },
         {
@@ -425,19 +424,22 @@ class TankTable extends Component {
             }
           },
           dataIndex: "volume",
-          width: "10%",
+          width: "9%",
           render: (text, record) => (
             <span>
               {record.node.latestReading
                 ? record.node.latestReading.levelPercent != null
-                  ? record.node.latestReading.levelPercent *
-                    100 *
-                    (record.node.specifications
-                      ? record.node.specifications.capacityGallons / 100
-                      : 0)
+                  ? Math.round(
+                      record.node.latestReading.levelPercent *
+                        100 *
+                        (record.node.specifications
+                          ? record.node.specifications.capacityGallons / 100
+                          : 0)
+                    ) +
+                    " " +
+                    record.node.specifications.capacityUnits
                   : 0
                 : "0"}{" "}
-              G
             </span>
           ),
         },
@@ -463,15 +465,18 @@ class TankTable extends Component {
             }
           },
           dataIndex: "potential",
-          width: "10%",
+          width: "9%",
           render: (text, record) => (
             <span>
               {record.node.latestReading
                 ? record.node.latestReading.refillPotentialGallons != null
-                  ? record.node.latestReading.refillPotentialGallons
+                  ? Math.round(
+                      record.node.latestReading.refillPotentialGallons
+                    ) +
+                    " " +
+                    record.node.specifications.capacityUnits
                   : "0"
                 : "0"}{" "}
-              G
             </span>
           ),
         },
@@ -493,18 +498,19 @@ class TankTable extends Component {
             }
           },
           dataIndex: "capacityGallons",
-          width: "10%",
+          width: "9%",
           render: (text, record) => (
             <span>
               {record.node.specifications
-                ? record.node.specifications.capacityGallons
+                ? Math.round(record.node.specifications.capacityGallons) +
+                  " " +
+                  record.node.specifications.capacityUnits
                 : ""}{" "}
-              G
             </span>
           ),
         },
         {
-          title: (
+          title: (text) => (
             <Popover
               placement="bottomRight"
               content={
@@ -518,7 +524,7 @@ class TankTable extends Component {
                       {/* <i className="fas fa-check-square"></i> */}
                       {/* <p>Select Multiple</p> */}
                       <Checkbox
-                        // checked={this.state.selectionEnabled}
+                        checked={this.state.selectionEnabled}
                         onChange={this.setSelection}
                       >
                         <p>Select Multiple</p>
@@ -551,6 +557,7 @@ class TankTable extends Component {
         },
       ],
     };
+
     this.hideForm = this.hideForm.bind(this);
     this.showCustomizedForm = this.showCustomizedForm.bind(this);
     this.exportDrawer = this.exportDrawer.bind(this);
@@ -581,11 +588,14 @@ class TankTable extends Component {
       adCommodityValue: prevProps.adCommodityValue,
       adLevelValue: prevProps.adLevelValue,
       adLevelOP: prevProps.adLevelOP,
+      adLevelGraphOP: prevProps.adLevelGraphOP,
+      adLevelGraphValue: prevProps.adLevelGraphValue,
       adAlert: prevProps.adAlert,
       adSensor: prevProps.adSensor,
       adTankSiveV: prevProps.adTankSiveV,
       adTankSiveOP: prevProps.adTankSiveOP,
       filterTableFromGraph: prevProps.filterTableFromGraph,
+      saveFiler: prevProps.saveFiler,
     };
 
     const currentPropsValues = {
@@ -593,11 +603,14 @@ class TankTable extends Component {
       adCommodityValue: this.props.adCommodityValue,
       adLevelValue: this.props.adLevelValue,
       adLevelOP: this.props.adLevelOP,
+      adLevelGraphOP: this.props.adLevelGraphOP,
+      adLevelGraphValue: this.props.adLevelGraphValue,
       adAlert: this.props.adAlert,
       adSensor: this.props.adSensor,
       adTankSiveV: this.props.adTankSiveV,
       adTankSiveOP: this.props.adTankSiveOP,
       filterTableFromGraph: this.props.filterTableFromGraph,
+      saveFiler: this.props.saveFiler,
     };
 
     if (!lodash.isEqual(prevPropsValues, currentPropsValues)) {
@@ -607,27 +620,96 @@ class TankTable extends Component {
 
   updateFiltersFromProps = () => {
     var filtercondition = [];
+    if (this.props.adLevelGraphValue != "") {
+      if (
+        this.props.adLevelGraphValue === "0.30" &&
+        this.props.adLevelGraphOP === "<"
+      ) {
+        filtercondition.push([
+          {
+            levelPercent: {
+              op: this.props.adLevelGraphOP,
+              v: this.props.adLevelGraphValue,
+            },
+          },
+          { levelPercent: { op: ">=", v: "0.10" } },
+        ]);
+      } else if (
+        this.props.adLevelGraphValue === "0.10" &&
+        this.props.adLevelGraphOP === "<"
+      ) {
+        filtercondition.push({
+          _or: [
+            {
+              levelPercent: {
+                op: this.props.adLevelGraphOP,
+                v: this.props.adLevelGraphValue,
+              },
+            },
+            { levelPercent: { op: "isNull" } },
+          ],
+        });
+      } else {
+        filtercondition.push({
+          levelPercent: {
+            op: this.props.adLevelGraphOP,
+            v: this.props.adLevelGraphValue,
+          },
+        });
+      }
+    }
     if (this.props.adSearchValue != "")
       filtercondition.push({
         description: { op: "match", v: this.props.adSearchValue },
       });
 
     if (this.props.adLevelValue != "") {
-      if (this.props.adLevelValue === "0.80" && this.props.adLevelOP === "<") {
-        filtercondition.push({
-          levelPercent: {
-            op: this.props.adLevelOP,
-            v: this.props.adLevelValue,
-          },
-          levelPercent: { op: ">", v: ".30" },
-        });
-      } else
+      if (this.props.adLevelValue === "0.80" && this.props.adLevelOP === "<=") {
         filtercondition.push({
           levelPercent: {
             op: this.props.adLevelOP,
             v: this.props.adLevelValue,
           },
         });
+        filtercondition.push({ levelPercent: { op: ">=", v: ".30" } });
+      } else if (
+        this.props.adLevelValue === "0.30" &&
+        this.props.adLevelOP === "<"
+      ) {
+        filtercondition.push({
+          _or: [
+            {
+              levelPercent: {
+                op: this.props.adLevelOP,
+                v: this.props.adLevelValue,
+              },
+            },
+            { levelPercent: { op: "isNull" } },
+          ],
+        });
+      } else if (
+        this.props.adLevelValue === "0.10" &&
+        this.props.adLevelOP === "<"
+      ) {
+        filtercondition.push({
+          _or: [
+            {
+              levelPercent: {
+                op: this.props.adLevelOP,
+                v: this.props.adLevelValue,
+              },
+            },
+            { levelPercent: { op: "isNull" } },
+          ],
+        });
+      } else {
+        filtercondition.push({
+          levelPercent: {
+            op: this.props.adLevelOP,
+            v: this.props.adLevelValue,
+          },
+        });
+      }
     }
 
     if (this.props.adAlert == "High") {
@@ -636,17 +718,17 @@ class TankTable extends Component {
     if (this.props.adAlert == "Medium") {
       filtercondition.push({ mediumAlarmCnt: { op: ">", v: 0 } });
     }
-    if (this.props.adSensor == "Online") {
+    if (this.props.adSensor == "Offline") {
       filtercondition.push({
         alarmingTypes: { op: "in", v: "sensorMissedReportsAlarm" },
       });
     }
-    if (this.props.adSensor == "Offline") {
+    if (this.props.adSensor == "Online") {
       filtercondition.push({
         alarmingTypes: { op: "not in", v: "sensorMissedReportsAlarm" },
       });
     }
-    if (this.props.adTankSiveV != "" && this.props.adTankSiveOP != "")
+    if (this.props.adTankSiveV != 0 && this.props.adTankSiveOP != "")
       filtercondition.push({
         capacityGallons: {
           op: this.props.adTankSiveOP,
@@ -654,7 +736,8 @@ class TankTable extends Component {
         },
       });
 
-    console.log("this.props.adAler", filtercondition);
+    if (this.props.saveFiler.length || this.props.saveFiler._or)
+      filtercondition = this.props.saveFiler;
 
     this.setState({ filtercondition });
   };
@@ -720,23 +803,23 @@ class TankTable extends Component {
       this.setState({ selectedRowKeys: lastSelectedRowIndex });
     }
     this.setState({ selectedRowKeys });
-    console.log("selectedRowKeys changed: ", selectedRowKeys);
   };
   setSelection = (e) => {
     this.setState({
       selectedRowKeys: [],
       selectionEnabled: e.target.checked,
     });
-    console.log("selectedKeys", this.state.selectedRowKeys);
   };
   redirectToHome = (record) => {
     const { history } = this.props;
+    // window.location.href = `/tank-details/${record.node.id}`;
     if (history) history.push(`/tank-details/${record.node.id}`);
   };
   addAlertCounter = (alarm) => {
     if (alarm.alarming === true) {
     }
   };
+
   render() {
     const { history } = this.props;
     const {
@@ -760,14 +843,13 @@ class TankTable extends Component {
       type: "checkbox",
     };
     console.log("anjaliaaaa", data.locationEntry);
-    //const renderAuthrrButton = () => {
-    //    if (data.locationEntry.tanks.totalCount > data.locationEntry.tanks.edges.length) {
-    //        return <button>Logout</button>
-    //    } else {
-    //        return <button>Login</button>
-    //    }
-    //}
-
+    const columns = this.state.columns.map((col, index) => ({
+      ...col,
+      onHeaderCell: (column) => ({
+        width: column.width,
+        onResize: this.handleResize(index),
+      }),
+    }));
     return (
       <div className="tank_table">
         <Query
@@ -803,19 +885,16 @@ class TankTable extends Component {
                   selectedTankId: this.props.selectedTankId,
                   filteredByDate: false,
                 });
-              console.log("tankTable", data);
-              console.log(
-                "high alarm",
-                data.locationEntry.tanks.aggregate.sum_hasHighAlarm
-              );
               return (
                 data &&
                 data.locationEntry && (
                   <>
                     <ReactDragListView.DragColumn {...this.dragProps}>
                       <Table
+                        // bordered={true}
                         dataSource={data.locationEntry.tanks.edges}
                         columns={this.state.columns}
+                        // components={this.components}
                         size="small"
                         onRow={(record) => {
                           return {

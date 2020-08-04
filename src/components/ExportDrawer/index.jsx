@@ -191,31 +191,41 @@ class ExportDrawer extends Component {
         Commodity: "Propane",
         "Current Volume": item.node.latestReading
           ? item.node.latestReading.levelPercent != null
-            ? item.node.latestReading.levelPercent *
-                100 *
-                (item.node.specifications
-                  ? item.node.specifications.capacityGallons / 100
-                  : 0) +
+            ? Math.round(
+                item.node.latestReading.levelPercent *
+                  100 *
+                  (item.node.specifications
+                    ? item.node.specifications.capacityGallons / 100
+                    : 0)
+              ) +
               " " +
-              "G"
-            : 0 + "G"
+              item.node.specifications.capacityUnits
+            : 0
           : "0",
         "Refill Potential": item.node.latestReading
           ? item.node.latestReading.refillPotentialGallons
-            ? item.node.latestReading.refillPotentialGallons
+            ? Math.round(item.node.latestReading.refillPotentialGallons) +
+              " " +
+              item.node.specifications.capacityUnits
             : "0"
           : "0",
         "Tank Capacity": item.node.specifications
-          ? item.node.specifications.capacityGallons
+          ? Math.round(item.node.specifications.capacityGallons) +
+            " " +
+            item.node.specifications.capacityUnits
           : "",
         TemperatureCelcius: item.node.latestReading
           ? item.node.latestReading.temperatureCelsius
-            ? item.node.latestReading.temperatureCelsius + " " + "C"
+            ? item.node.latestReading.temperatureCelsius.toFixed(1) + " " + "C"
             : "0"
           : 0,
         TemperatureFehrenheit: item.node.latestReading
           ? item.node.latestReading.temperatureCelsius
-            ? item.node.latestReading.temperatureCelsius * 1.8 + 32 + " " + "F"
+            ? (item.node.latestReading.temperatureCelsius * 1.8 + 32).toFixed(
+                1
+              ) +
+              " " +
+              "F"
             : "0"
           : 0,
         Battery: item.node.latestReading
@@ -551,9 +561,9 @@ class ExportDrawer extends Component {
                         <CSVLink
                           disabled={!showFilterBtn}
                           data={this.state.csvData}
-                          filename={`Tanks_List-${moment(
-                            new Date()
-                          ).toISOString()}.csv`}
+                          filename={`Tanks_List-${moment(new Date()).format(
+                            "YYYY-MM-DD"
+                          )}.csv`}
                         >
                           <Button
                             size="large"

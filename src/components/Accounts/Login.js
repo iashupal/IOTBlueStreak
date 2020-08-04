@@ -16,6 +16,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [checked, setChecked] = useState(false);
   const { loading } = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onSubmit = (event) => {
     event.preventDefault();
@@ -31,10 +32,12 @@ function Login() {
     Auth.signIn(authDetails, checked)
       .then((data) => {
         // localStorage.setItem("token", data.session.idToken.jwtToken);
-        window.location = "/";
+
         console.log("Logged in", data);
+        window.location.href = "/";
       })
       .catch((err) => {
+        setErrorMessage(err.message);
         console.error("Failed to login", err);
       });
   };
@@ -60,15 +63,11 @@ function Login() {
         </div>
         <div className="signin_rght">
           <div className="signin_inr_rght">
-            {/* <AmplifyAuthenticator>
-              <AmplifySignIn
-                headerText="Client Login"
-                slot="sign-in"
-              ></AmplifySignIn> */}
             <h4>
               Client <strong>Login</strong>
             </h4>
             <form>
+              <div style={{ color: "red" }}>{errorMessage}</div>
               <input
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}

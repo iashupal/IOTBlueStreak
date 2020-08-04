@@ -15,6 +15,7 @@ import TankTable from "../components/TankTable";
 import AdvancedSearchForm from "../components/AdvancedSearchForm";
 import "./styles.css";
 import { gql } from "apollo-boost";
+//import { gql,useQuery } from '@apollo/client';
 import { graphql, Query } from "react-apollo";
 import Loader from "../components/Loader";
 import SideNav from "../components/SideNav";
@@ -47,6 +48,60 @@ const leftPanel = gql`
   }
 `;
 
+const leftPanelwithParent = gql`
+  query leftPanelData($id: Int) {
+    locationEntry(id: $id) {
+      parent {
+        id
+        description
+      }
+      ... on Location {
+        sublocations(first: 100, sortDirection: asc, sortBy: description) {
+          totalCount
+          edges {
+            node {
+              __typename
+              id
+              description
+              parent {
+                id
+                description
+                parent {
+                  id
+                  description
+                  parent {
+                    id
+                    description
+                    parent {
+                      id
+                      description
+                      parent {
+                        id
+                        description
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+//const leftPanelforNoChild = gql`
+//query leftPanelData($id: Int) {
+//    locationEntry(id: $id) {
+//        parent {
+//            id
+//            description
+//        }
+//        id
+//    }
+//}
+//`;
+
 // const leftGatewayQuery = gql`
 //   query leftGatewayPanelData($id: Int) {
 //     locationEntry(id: $id) {
@@ -70,13 +125,17 @@ class MainLayout extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      IsParentSearch: false,
       leftPanelData: [],
       wholeCard: false,
+      currentId: userId,
       username: username,
       tab: "",
+      saveFilterId: 0,
       subTab: "",
       formVisible: false,
       tankId: "",
+      IsparentId: 1,
       selectid: userId,
       typename: "",
       description: "",
@@ -88,9 +147,11 @@ class MainLayout extends Component {
       adserchtxt: "",
       adlevelvalue: "",
       adlevelOp: "",
+      adLevelGraphValue: "",
+      adLevelGraphOP: "",
       adAlert: "",
       adSensor: "",
-      adTankSiveV: "",
+      adTankSiveV: 0,
       adTankSiveOP: "",
       selectedTab: false,
       selectedSubTab: false,
@@ -105,6 +166,9 @@ class MainLayout extends Component {
       adCommodityValue: "Propane",
       collapsed: false,
       filterTableFromGraph: "",
+      saveFiler: {},
+      leftPanelDefaultData: [],
+      isSaveSearch: false,
     };
     this.changeFullTab = this.changeFullTab.bind(this);
     this.changeHalfTab = this.changeHalfTab.bind(this);
@@ -112,6 +176,7 @@ class MainLayout extends Component {
     this.hideForm = this.hideForm.bind(this);
     this.onSearchingAdvance = this.onSearchingAdvance.bind(this);
     this.onsavingAdvanceSearch = this.onsavingAdvanceSearch.bind(this);
+    this.onSearchingSave = this.onSearchingSave.bind(this);
   }
   toggleCollapse = () => this.setState({ collapsed: !this.state.collapsed });
   onsavingAdvanceSearch() {
@@ -139,7 +204,7 @@ class MainLayout extends Component {
       op = "<";
       value = "0.30";
     } else if (tankStatus === "30% to 80%") {
-      op = "<";
+      op = "<=";
       value = "0.80";
     } else if (tankStatus === "Above 80%") {
       op = ">";
@@ -157,6 +222,7 @@ class MainLayout extends Component {
         adSensor: sensor,
         adTankSiveV: tankSizeV,
         adTankSiveOP: tankSizeO,
+        saveFiler: {},
       },
 
       function () {
@@ -165,6 +231,89 @@ class MainLayout extends Component {
     );
     //console.log("anjali", tagValue2)
     //console.log("tag alert", this.state.adlevelOp);
+  }
+
+  onSearchingSave(filter, id) {
+    // this.state.isSaveSearch=true
+    console.log(
+      " this.state.leftPanelDefaultData",
+      this.state.leftPanelDefaultData
+    );
+    this.setState(
+      {
+        formVisible: false,
+        saveFiler: filter,
+        selectid: id,
+        isSaveSearch: true,
+        selectid: id,
+      },
+
+      function () {
+        console.log("function state", this.state.adserchtxt);
+      }
+    );
+
+    // this.changeTab(this.state.leftPanelDefaultData[0].node.id, this.state.leftPanelDefaultData[0].node.id, this.state.leftPanelDefaultData[0].node.description, this.state.leftPanelDefaultData[0].node.__typename,false)
+
+    //const { loading, error, data } = useQuery(leftPanel, {
+    //    variables: {id:this.state.leftPanelDefaultData[0].node.id },
+    //});
+    //console.log("appollo",data)
+  }
+  serParentId(id) {
+    this.state.IsparentId = id;
+    this.state.IsParentSearch = true;
+    //this.render();
+  }
+
+  getSaveselectedId() {
+    this.state.isSaveSearch = false;
+    var parentNode = [];
+    var parentHeirachiIds = [];
+    var loopParameter = true;
+    console.log("leftPanelDefaultData", this.state.leftPanelDefaultData);
+    parentNode = this.state.leftPanelDefaultData[0].node.parent;
+    console.log("parentNode", parentNode);
+    for (var i = 0; loopParameter != false; i++) {
+      if (parentNode.description != "ROOT") {
+        parentHeirachiIds.push(parentNode);
+        i = i + 1;
+        parentNode = parentNode.parent;
+      } else loopParameter = false;
+    }
+
+    console.log("parentHeirachiIds", parentHeirachiIds);
+    var loopParamater2 = 1;
+    for (var i = parentHeirachiIds.length - 2; i >= 0; i--) {
+      if (loopParamater2 == 1) {
+        this.changeTab(
+          parentHeirachiIds[i].id,
+          parentHeirachiIds[i].id,
+          parentHeirachiIds[i].description,
+          parentHeirachiIds[i].__typename,
+          false
+        );
+      }
+      if (loopParamater2 == 2) {
+        this.changeSubTabs(
+          parentHeirachiIds[i].id,
+          parentHeirachiIds[i].id,
+          parentHeirachiIds[i].description,
+          parentHeirachiIds[i].__typename,
+          false
+        );
+      }
+      if (loopParamater2 == 3) {
+        this.changeDeepSubTabs(
+          parentHeirachiIds[i].id,
+          parentHeirachiIds[i].id,
+          parentHeirachiIds[i].description,
+          parentHeirachiIds[i].__typename,
+          false
+        );
+      }
+      loopParamater2 = loopParamater2 + 1;
+    }
   }
   changeFullTab() {
     this.setState({ wholeCard: true });
@@ -180,12 +329,14 @@ class MainLayout extends Component {
   changeTab = (tab, id, desc, typename, tabDeselectCondition) => {
     localStorage.setItem("userId", id);
     this.state.subChildId = id;
-    if (tabDeselectCondition === true) {
+    if (tabDeselectCondition === true && this.state.selectid == id) {
       tab = "";
       id = userId;
+      desc = "";
     }
-
     this.setState({
+      currentId: id,
+      saveFiler: {},
       advanceReset: true,
       tab,
       selectid: id,
@@ -198,9 +349,11 @@ class MainLayout extends Component {
       adserchtxt: "",
       adlevelvalue: "",
       adlevelOp: "",
+      adLevelGraphOP: "",
+      adLevelGraphValue: "",
       adAlert: "",
       adSensor: "",
-      adTankSiveV: "",
+      adTankSiveV: 0,
       adTankSiveOP: "",
       subDescription: "",
       deepSubTabDesc: "",
@@ -214,15 +367,43 @@ class MainLayout extends Component {
   };
 
   changeSubTabs = (subtab, id, subDesc, typename, subtabDeselectCondition) => {
+    if (subtabDeselectCondition === true && this.state.selectid == id) {
+      subtab = "";
+      id = this.state.subChildId;
+    }
+    this.setState({
+      currentId: id,
+      advanceReset: true,
+      subtab,
+      saveFiler: {},
+      selectid: id,
+      subDescription: subDesc,
+      typename: typename,
+      adserchtxt: "",
+      adlevelvalue: "",
+      adLevelGraphValue: "",
+      adlevelOp: "",
+      adLevelGraphOP: "",
+      adAlert: "",
+      adSensor: "",
+      adTankSiveV: 0,
+      adTankSiveOP: "",
+      deepSubTabDesc: "",
+      gatewayTabDesc: "",
+      gatewayTankTabDesc: "",
+    });
+  };
+  changeSubTabs = (subtab, id, subDesc, typename, subtabDeselectCondition) => {
     this.state.subTabId = id;
     if (subtabDeselectCondition === true && this.state.selectid == id) {
       subtab = "";
       id = this.state.subChildId;
     }
-    console.log("aaaaaaaaaaaaaaaaaa", this.state.selectid, id);
     this.setState({
+      currentId: id,
       advanceReset: true,
       subtab,
+      saveFiler: {},
       selectid: id,
       subDescription: subDesc,
       typename: typename,
@@ -231,10 +412,12 @@ class MainLayout extends Component {
       gatewaytanktab: "",
       adserchtxt: "",
       adlevelvalue: "",
+      adLevelGraphValue: "",
       adlevelOp: "",
+      adLevelGraphOP: "",
       adAlert: "",
       adSensor: "",
-      adTankSiveV: "",
+      adTankSiveV: 0,
       adTankSiveOP: "",
       deepSubTabDesc: "",
       gatewayTabDesc: "",
@@ -244,7 +427,75 @@ class MainLayout extends Component {
     console.log("typename", typename);
     console.log("subDescription", subDesc);
   };
-
+  changeDeepSubTabs = (deepsubtab, id, deepsubDesc, typename) => {
+    this.setState({
+      currentId: id,
+      deepsubtab,
+      selectid: id,
+      saveFiler: {},
+      deepSubTabDesc: deepsubDesc,
+      typename: typename,
+      adserchtxt: "",
+      adlevelvalue: "",
+      adLevelGraphValue: "",
+      adlevelOp: "",
+      adLevelGraphOP: "",
+      adAlert: "",
+      adSensor: "",
+      adTankSiveV: 0,
+      adTankSiveOP: "",
+      gatewayTabDesc: "",
+      gatewayTankTabDesc: "",
+    });
+  };
+  changeGatewayTab = (gatewaytab, id, gatewayDesc, typename) => {
+    this.setState({
+      gatewaytab,
+      selectid: id,
+      gatewayTabDesc: gatewayDesc,
+      typename: typename,
+      adserchtxt: "",
+      saveFiler: {},
+      adlevelvalue: "",
+      adLevelGraphValue: "",
+      adlevelOp: "",
+      adLevelGraphOP: "",
+      adAlert: "",
+      adSensor: "",
+      adTankSiveV: 0,
+      adTankSiveOP: "",
+      gatewayTankTabDesc: "",
+    });
+  };
+  changeGatewayTankTab = (gatewaytanktab, id, gatewaytankDesc, typename) => {
+    this.setState({
+      gatewaytanktab,
+      selectid: id,
+      gatewayTankTabDesc: gatewaytankDesc,
+      typename: typename,
+      adserchtxt: "",
+      adlevelvalue: "",
+      adLevelGraphValue: "",
+      adlevelOp: "",
+      adLevelGraphOP: "",
+      adAlert: "",
+      saveFiler: {},
+      adSensor: "",
+      adTankSiveV: 0,
+      adTankSiveOP: "",
+    });
+  };
+  showForm() {
+    this.setState({
+      formVisible: true,
+      mode: "advanced",
+    });
+  }
+  hideForm() {
+    this.setState({
+      formVisible: false,
+    });
+  }
   changeDeepSubTabs = (
     deepsubtab,
     id,
@@ -259,7 +510,9 @@ class MainLayout extends Component {
     }
     this.setState({
       advanceReset: true,
+      currentId: id,
       deepsubtab,
+      saveFiler: {},
       selectid: id,
       deepSubTabDesc: deepsubDesc,
       typename: typename,
@@ -267,10 +520,12 @@ class MainLayout extends Component {
       gatewaytanktab: "",
       adserchtxt: "",
       adlevelvalue: "",
+      adLevelGraphValue: "",
       adlevelOp: "",
+      adLevelGraphOP: "",
       adAlert: "",
       adSensor: "",
-      adTankSiveV: "",
+      adTankSiveV: 0,
       adTankSiveOP: "",
       gatewayTabDesc: "",
       gatewayTankTabDesc: "",
@@ -293,16 +548,19 @@ class MainLayout extends Component {
     this.setState({
       advanceReset: true,
       gatewaytab,
+      saveFiler: {},
       selectid: id,
       gatewayTabDesc: gatewayDesc,
       typename: typename,
       gatewaytanktab: "",
       adserchtxt: "",
       adlevelvalue: "",
+      adLevelGraphValue: "",
       adlevelOp: "",
+      adLevelGraphOP: "",
       adAlert: "",
       adSensor: "",
-      adTankSiveV: "",
+      adTankSiveV: 0,
       adTankSiveOP: "",
       gatewayTankTabDesc: "",
       selectedGatewayTab: !gatewayTabDeselectCondition,
@@ -323,14 +581,17 @@ class MainLayout extends Component {
       advanceReset: true,
       gatewaytanktab,
       selectid: id,
+      saveFiler: {},
       gatewayTankTabDesc: gatewaytankDesc,
       typename: typename,
       adserchtxt: "",
       adlevelvalue: "",
+      adLevelGraphValue: "",
       adlevelOp: "",
+      adLevelGraphOP: "",
       adAlert: "",
       adSensor: "",
-      adTankSiveV: "",
+      adTankSiveV: 0,
       adTankSiveOP: "",
       selectedGatewayTankTab: !gatewayTankTabDeselectCondition,
     });
@@ -346,15 +607,29 @@ class MainLayout extends Component {
       formVisible: false,
     });
   }
+  handleGraphicClick = (tankStatus) => {
+    console.log("tank id------------------------", this.state.selectid);
+    this.setState({ tankId: this.state.selectid });
+    console.log("handle graph data", this.state.tankId);
 
-  handleGraphicClick = () => {
-    console.log("tank id------------------------", tankId);
-    this.setState((tankId = this.state.tankId));
+    var op = "",
+      value = "";
+    if (tankStatus === "Below 10%") {
+      op = "<";
+      value = "0.10";
+    } else if (tankStatus === "Below 30%") {
+      op = "<";
+      value = "0.30";
+    } else if (tankStatus === "Above 30%") {
+      op = ">=";
+      value = "0.30";
+    }
+    this.setState({
+      adLevelGraphValue: value,
+      adLevelGraphOP: op,
+    });
   };
-  // handleGraphFilter = (tankId) => {
-  //   this.setState({ filterTableFromGraph: tankId });
-  //   console.log("filterTable from graph", this.state.filterTableFromGraph);
-  // };
+
   render() {
     let { data } = this.props;
     var filterdata = [];
@@ -381,6 +656,8 @@ class MainLayout extends Component {
         }
       );
     }
+    //this.state.leftPanelDefaultData = filterdata;
+    console.log("filterdata", filterdata);
     console.log("selectid", this.state.selectid);
     console.log("desc---", this.state.description);
     console.log("leftTabs", data);
@@ -411,6 +688,9 @@ class MainLayout extends Component {
       selectedGatewayTab,
       selectedGatewayTankTab,
       tankId,
+      isSaveSearch,
+      selectid,
+      IsparentId,
     } = this.state;
     let button;
     if (wholeCard) {
@@ -435,7 +715,7 @@ class MainLayout extends Component {
             wholeCard={wholeCard}
             selectedTankId={this.state.selectid ? this.state.selectid : ""}
             selectedTypename={typename}
-            // callback={this.handleGraphicClick}
+            callTankParent={this.handleGraphicClick}
           />
           {button}
         </div>
@@ -444,8 +724,8 @@ class MainLayout extends Component {
             <Sider
               style={{
                 overflow: "auto",
-                height: "110vh",
-                // height: "112vh",
+                // height: "110vh",
+                height: "112vh",
                 left: 0,
               }}
               theme="light"
@@ -459,9 +739,37 @@ class MainLayout extends Component {
 
               <div className="vertrax_leftSection">
                 <Search
-                  saveIcon
+                  // saveIcon
                   onChange={(e) => this.searchTextfromleftTab(e.target.value)}
                 />
+
+                {this.state.isSaveSearch === true && (
+                  <Query
+                    query={leftPanelwithParent}
+                    variables={{ id: selectid }}
+                  >
+                    {({ loading, error, data }) => {
+                      console.log("data", data);
+                      if (loading) {
+                        return (
+                          <div>
+                            <Loader />
+                          </div>
+                        );
+                      }
+
+                      if (error) {
+                        return <div>Error</div>;
+                      } else if (data) {
+                        this.state.leftPanelDefaultData =
+                          data.locationEntry.sublocations.edges;
+                        this.getSaveselectedId();
+                      }
+                      return null;
+                    }}
+                  </Query>
+                )}
+
                 <div className="tab_wrapper">
                   {filterdata.length > 0 ? (
                     <Fragment>
@@ -871,12 +1179,12 @@ class MainLayout extends Component {
                           />
                         )}
 
-                        {description === description ? (
-                          <h3>
+                        {description === "" ? (
+                          <h4>
                             {description === "" ? "All Clients" : description}
-                          </h3>
+                          </h4>
                         ) : (
-                          description
+                          <h4>{description}</h4>
                         )}
                       </div>
 
@@ -954,6 +1262,10 @@ class MainLayout extends Component {
                   adTankSiveV={this.state.adTankSiveV}
                   adTankSiveOP={this.state.adTankSiveOP}
                   adCommodityValue={this.state.adCommodityValue}
+                  saveFiler={this.state.saveFiler}
+                  saveFilterId={this.state.saveFilterId}
+                  adLevelGraphValue={this.state.adLevelGraphValue}
+                  adLevelGraphOP={this.state.adLevelGraphOP}
                   // callback={tankId}
                 />
               </div>
@@ -967,9 +1279,11 @@ class MainLayout extends Component {
           mode={mode}
           entry={entry}
           fetchSerachValue={this.onSearchingAdvance}
+          fetchSaveValue={this.onSearchingSave}
           initialvalue={this.state.adserchtxt}
           advanceReset={this.state.advanceReset}
           SavingAdvanceSearch={this.onsavingAdvanceSearch}
+          currentId={this.state.currentId}
         />
       </Fragment>
     );

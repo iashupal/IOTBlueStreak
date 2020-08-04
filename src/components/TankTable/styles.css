@@ -277,6 +277,36 @@ i.marker {
   background-color: var(--color-primary);
 }
 
+/* resizable css */
+/* .tank_table #components-table-demo-resizable-column .react-resizable {
+  position: relative;
+  background-clip: padding-box;
+}
+
+.tank_table #components-table-demo-resizable-column .react-resizable-handle {
+  position: absolute;
+  width: 10px;
+  height: 100%;
+  bottom: 0;
+  right: -5px;
+  cursor: col-resize;
+  z-index: 999;
+} */
+.tank_table .react-resizable {
+  position: relative;
+  background-clip: padding-box;
+}
+
+.tank_table .react-resizable-handle {
+  position: absolute;
+  width: 10px;
+  height: 100%;
+  bottom: 0;
+  right: -5px;
+  cursor: col-resize;
+  background-color: red;
+  z-index: 9999;
+}
 @media screen and (max-width: 1440px) {
   .tank_alerts span {
     display: block;

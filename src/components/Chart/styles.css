@@ -9,7 +9,7 @@
 }
 .CircularProgressbar .CircularProgressbar-path {
   transition: none;
-  stroke-width: 7px;
+  stroke-width: 8px;
   stroke-linecap: square;
   /* stroke: pink; */
 }
@@ -27,6 +27,13 @@
 }
 .graphStroke.clientStroke.CircularProgressbar .CircularProgressbar-path {
   stroke: var(--color-primary);
+}
+.graphStroke.gatewayStroke.CircularProgressbar .CircularProgressbar-path {
+  stroke: var(--color-red);
+  /* stroke-dashoffset: 1% !important; */
+}
+.graphStroke.gatewayStroke.CircularProgressbar .CircularProgressbar-trail {
+  stroke: var(--color-parrot);
 }
 .progressbar_inr--info {
   position: absolute;

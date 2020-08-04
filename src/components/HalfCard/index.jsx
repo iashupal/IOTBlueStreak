@@ -33,7 +33,10 @@ let totalGatewayGraphs = gql`
       }
       tanksBelow30: tanks(
         recursive: true
-        filter: [{ levelPercent: { op: "<", v: 0.30 } }]
+        filter: [
+          { levelPercent: { op: "<", v: 0.30 } }
+          { levelPercent: { op: ">=", v: 0.10 } }
+        ]
       ) {
         totalCount
       }
@@ -91,7 +94,10 @@ let totalGraphs = gql`
       }
       tanksBelow30: tanks(
         recursive: true
-        filter: [{ levelPercent: { op: "<", v: 0.30 } }]
+        filter: [
+          { levelPercent: { op: "<", v: 0.30 } }
+          { levelPercent: { op: ">=", v: 0.10 } }
+        ]
       ) {
         totalCount
       }

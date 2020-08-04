@@ -15,11 +15,15 @@ function Header(props) {
   return (
     <div className="vertrax_header">
       <div className="vertrax_headerContainer">
-        <div className="vertrax_header--left">
+              <div className="vertrax_header--left">
+                  
+                      <a href="/">
           <img
             src={require("../../assets/images/vertraxLogo.png")}
             alt="Vertrax_logo"
-          />
+                          />
+                          </a>
+                     
           <AllResults
             resultHeading={
               props.tankdescription === ""
@@ -40,16 +44,16 @@ function Header(props) {
             content={
               <div className="tank_menu">
                 <ul>
-                  <li>
+                  {/* <li>
                     <i className="fas fa-file-export"></i>
                     <p>Edit Profile</p>
-                  </li>
-                  <li>
+                  </li> */}
+                  {/* <li>
                     <Link to="/">
                       <i className="fas fa-check-square"></i>
                       <p>Preferences</p>
                     </Link>
-                  </li>
+                  </li> */}
                   <li onClick={logout}>
                     {/* <Link to="/login"> */}
                     {/* <AmplifySignOut> */}

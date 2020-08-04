@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Drawer, Button, Divider, Row, Col, Checkbox } from "antd";
+import { Drawer, Button, Divider, Row, Col, Checkbox, Modal } from "antd";
 import SaveCard from "../SaveCard";
 import arrowLeft from "../../assets/images/arrow-left-blue.png";
 import Search from "../Search";
@@ -9,6 +9,7 @@ import "./styles.css";
 import AdvancedSearchTabs from "../AdvancedSearchTabs";
 import Filters from "../Filters";
 import save from "../../assets/images/save.png";
+import Loader from "../../components/Loader";
 import { Tag } from "antd";
 import FilterChips from "../FilterChips";
 import { gql } from "apollo-boost";
@@ -21,19 +22,70 @@ import $ from "jquery";
 // `;
 const { RangePicker } = DatePicker;
 const dateFormat = "YYYY/MM/DD";
-const POST_MUTATION = gql`
-  mutation {
-    setUserSavedSearches(savedSearches: { client: "Test New", totalcount: "2" })
+const userSavedQuery = gql`
+  {
+    loggedInUser {
+      savedSearches
+    }
   }
 `;
+const POST_MUTATION = gql`
+  mutation($savedSearches: JSONObject) {
+    setUserSavedSearches(savedSearches: [$savedSearches])
+  }
+`;
+
+class Popup extends Component {
+  render() {
+    return (
+      // <Modal>
+      <div className="popup">
+        <div className="popup_inner">
+          <h2>{this.props.text}</h2>
+          <input
+            className="vertrax__tankInput"
+            type="text"
+            onChange={(e) => this.props.SearchName(e.target.value)}
+            placeholder="Enter Name for Save Search"
+            required
+          />
+          <Button
+            type="primary"
+            size="medium"
+            className="popup_closebtn"
+            onClick={this.props.closePopup}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="default"
+            size="medium"
+            className="popup_btn"
+            onClick={this.props.savePopup}
+            onClickCapture={this.props.callQuery}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+      // </Modal>
+    );
+  }
+}
+
 class AdvancedSearchForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      showPopup: false,
+      exposedFunctions: {},
+      temp: [],
+      renderSaves: [],
       visible: false,
       tagVisible: false,
-        tagVisible1: false,
-        advanceReset:false,
+      tagVisible1: false,
+      advanceReset: false,
+      tempadvanceReset: false,
       events: {},
       file: null,
       advancedTab: 0,
@@ -43,25 +95,49 @@ class AdvancedSearchForm extends Component {
       tagValue2: "",
       tagValue3: "",
       tagValue4: "",
-      serchtxt:"",
-        sizeValue: 0,
-        levelGallonValue: 0
+      serchtxt: "",
+      id: 0,
+      saveSearchName: "",
+      sizeValue: 0,
+      levelGallonValue: 0,
+      savedSearches: {},
+      tempdata: {
+        client: "Test New",
+        totalcount: "2",
+      },
+      disableSearch: true,
+      IsSaveSearch: false,
     };
-    } 
-    resetSearch() {
-        this.state.advanceReset = true
-        console.log("anjali")
-        this.setState({ serchtxt: "" });
-        this.state.tagValue = ""
-            this.state.tagValue1=""
-            this.state.tagValue2= ""
-            this.state.tagValue3= ""
-            this.state.tagValue4 = ""
-            this.state.levelGallonValue = ""
-           // this.state.serchtxt= this.props.initialvalue
-            this.state.filterTab = ""
-    }
+  }
+  resetSearch() {
+    this.setState({ tempadvanceReset: true });
 
+    console.log("anjali");
+    this.setState({ serchtxt: "" });
+    this.state.tagValue = "";
+    this.state.tagValue1 = "";
+    this.state.tagValue2 = "";
+    this.state.tagValue3 = "";
+    this.state.tagValue4 = "";
+    this.state.levelGallonValue = 0;
+    // this.state.serchtxt= this.props.initialvalue
+    this.state.filterTab = "";
+  }
+
+  savetogglePopup() {
+    if (this.state.saveSearchName == "" && this.state.showPopup == true) {
+    } else {
+      this.setState({
+        showPopup: !this.state.showPopup,
+      });
+    }
+  }
+
+  togglePopup() {
+    this.setState({
+      showPopup: !this.state.showPopup,
+    });
+  }
   changeTab = (advancedTab) => {
     this.setState({
       advancedTab,
@@ -72,28 +148,212 @@ class AdvancedSearchForm extends Component {
       filterTab,
     });
   };
-    callfetchValue() {
-        
+  callfetchValue() {
     this.props.fetchSerachValue(
       this.state.serchtxt,
       this.state.tagValue1,
-        this.state.tagValue2,
-        this.state.tagValue3,
-        this.state.levelGallonValue,
-        this.state.tagValue4
-
+      this.state.tagValue2,
+      this.state.tagValue3,
+      this.state.levelGallonValue,
+      this.state.tagValue4
+    );
+  }
+  saveAdvance() {
+    this.updateFiltersFromProps(
+      this.state.serchtxt,
+      this.state.tagValue1,
+      this.state.tagValue2,
+      this.state.tagValue3,
+      this.state.levelGallonValue,
+      this.state.tagValue4
     );
   }
 
+  updateFiltersFromProps(
+    serchtxt,
+    tankStatus,
+    alert,
+    sensor,
+    tankSizeV,
+    tankSizeO
+  ) {
+    this.state.disableSearch = false;
+    if (
+      serchtxt == "" &&
+      tankStatus == "" &&
+      alert == "" &&
+      sensor == "" &&
+      tankSizeV == 0 &&
+      tankSizeO == ""
+    )
+      this.state.disableSearch = true;
+    let { currentId } = this.props;
+    var filtercondition1 = [];
+
+    var op = "",
+      value = "";
+    if (tankStatus === "Below 10%") {
+      op = "<";
+      value = "0.10";
+    } else if (tankStatus === "Below 30%") {
+      op = "<";
+      value = "0.30";
+    } else if (tankStatus === "30% to 80%") {
+      op = "<=";
+      value = "0.80";
+    } else if (tankStatus === "Above 80%") {
+      op = ">";
+      value = "0.80";
+    }
+    if (serchtxt != "")
+      filtercondition1.push({
+        description: { op: "match", v: this.state.serchtxt },
+      });
+
+    if (tankStatus != "") {
+      if (value === "0.80" && op === "<=") {
+        filtercondition1.push(
+          {
+            levelPercent: {
+              op: op,
+              v: value,
+            },
+          },
+          {
+            levelPercent: {
+              op: ">=",
+              v: ".30",
+            },
+          }
+        );
+      } else if (value === "0.10" && op === "<") {
+        filtercondition1.push({
+          levelPercent: {
+            op: op,
+            v: value,
+          },
+        });
+        filtercondition1.push({
+          levelPercent: { op: "isNull" },
+        });
+      } else if (value === "0.30" && op === "<") {
+        filtercondition1.push({
+          levelPercent: {
+            op: op,
+            v: value,
+          },
+        });
+        filtercondition1.push({
+          levelPercent: { op: "isNull" },
+        });
+      } else
+        filtercondition1.push({
+          levelPercent: {
+            op: op,
+            v: value,
+          },
+        });
+    }
+
+    if (alert == "High") {
+      filtercondition1.push({ highAlarmCnt: { op: ">", v: 0 } });
+    }
+    if (alert == "Medium") {
+      filtercondition1.push({ mediumAlarmCnt: { op: ">", v: 0 } });
+    }
+    if (sensor == "Offline") {
+      filtercondition1.push({
+        alarmingTypes: { op: "in", v: "sensorMissedReportsAlarm" },
+      });
+    }
+    if (sensor == "Online") {
+      filtercondition1.push({
+        alarmingTypes: { op: "not in", v: "sensorMissedReportsAlarm" },
+      });
+    }
+    if (tankSizeV != "" && tankSizeO != "")
+      filtercondition1.push({
+        capacityGallons: {
+          op: tankSizeO,
+          v: tankSizeV,
+        },
+      });
+
+    console.log("this.state.temp", this.state.temp);
+    var tempSaveSerches = [];
+    if (value === "0.80" && op === "<=") {
+      tempSaveSerches.push({
+        filter: filtercondition1,
+        id: currentId,
+        date: new Date(),
+        name: this.state.saveSearchName,
+      });
+    } else {
+      tempSaveSerches.push({
+        filter: {
+          _or: filtercondition1,
+        },
+        id: currentId,
+        date: new Date(),
+        name: this.state.saveSearchName,
+      });
+    }
+    if (this.state.temp.length != undefined) {
+      this.state.temp.forEach(function (entry, index) {
+        console.log("index", index, entry);
+        var searchvar = [];
+        searchvar = entry;
+
+        Object.values(searchvar).forEach(function (element, index) {
+          if (index <= 9) tempSaveSerches.push(element);
+        });
+      });
+    }
+
+    console.log("tempsave serchhdsd", tempSaveSerches);
+
+    this.setState({
+      savedSearches: tempSaveSerches,
+      //    {
+      //    searches3: {
+      //        filter: {
+      //            _or: filtercondition1
+      //        },
+      //        id: currentId,
+      //        date: new Date()
+      //        },
+      //    searches4: {
+      //        filter: {
+      //             _or: filtercondition1
+      //        },
+      //        id: currentId,
+      //        date: new Date()
+      //        }
+      //}
+    });
+  }
+  getName = (saveSearchName) => {
+    this.setState({ saveSearchName }, function () {
+      console.log("tagValue4", saveSearchName);
+      this.saveAdvance();
+    });
+  };
+
+  searchBySave(filter, id) {
+    this.state.IsSaveSearch = true;
+    this.props.fetchSaveValue(filter, id);
+  }
   SavingAdvanceSearch() {
     // console.closeTag("Ad", "SavingAdvanceSearch");
     this.props.SavingAdvanceSearch();
   }
   searchTextfromAdvanceTab(searchtext) {
     this.setState({ serchtxt: searchtext });
+    this.saveAdvance();
   }
   showTagChip = (tagValue) => {
     console.log(1);
+    this.state.disableSearch = false;
     this.setState({ tagValue, tagVisible: !this.state.tagVisible });
     if (this.state.tagValue === "Propane") {
       $("#dvPropane").removeClass("activeSelectedTag");
@@ -103,6 +363,7 @@ class AdvancedSearchForm extends Component {
   showTagstatus = (tagValue1) => {
     console.log(1);
     this.setState({ tagValue1 }, function () {
+      this.saveAdvance();
       console.log("tagValue1", tagValue1);
     });
     $("#tgStatus").removeClass("ant-tag-hidden");
@@ -110,13 +371,16 @@ class AdvancedSearchForm extends Component {
   showTagAlerts = (tagValue2) => {
     console.log(2);
     this.setState({ tagValue2 }, function () {
+      this.saveAdvance();
       console.log("tagValue2", tagValue2);
     });
     $("#tgAlerts").removeClass("ant-tag-hidden");
+    this.saveAdvance();
   };
   showTagSensor = (tagValue3) => {
     console.log(3);
     this.setState({ tagValue3 }, function () {
+      this.saveAdvance();
       console.log("tagValue3", tagValue3);
     });
     $("#tgSensor").removeClass("ant-tag-hidden");
@@ -124,6 +388,7 @@ class AdvancedSearchForm extends Component {
   showTagSize = (tagValue4) => {
     console.log(1);
     this.setState({ tagValue4 }, function () {
+      this.saveAdvance();
       console.log("tagValue4", tagValue4);
     });
     $("#tgSize").removeClass("ant-tag-hidden");
@@ -135,6 +400,7 @@ class AdvancedSearchForm extends Component {
     this.setState({ tagVisible: !this.state.tagVisible });
     if (this.state.tagValue === "Propane") {
       $("#dvPropane").removeClass("activeSelectedTag");
+      this.saveAdvance();
     }
   };
   handleCloseStatus() {
@@ -148,9 +414,10 @@ class AdvancedSearchForm extends Component {
     } else if (this.state.tagValue1 === "Above 80%") {
       $("#above80").removeClass("activeSelectedTag");
     }
-      $("#tgStatus").addClass("ant-tag-hidden");
-      this.state.tagValue1 = "";
-      //this.callfetchValue();
+    $("#tgStatus").addClass("ant-tag-hidden");
+    this.state.tagValue1 = "";
+    this.saveAdvance();
+    //this.callfetchValue();
     // $("#dvTag_Status").remove();
   }
   handleCloseAlerts() {
@@ -159,17 +426,19 @@ class AdvancedSearchForm extends Component {
     } else if (this.state.tagValue2 === "High") {
       $("#high").removeClass("activeSelectedTag");
     }
-      $("#tgAlerts").addClass("ant-tag-hidden");
-      this.state.tagValue2 = "";
+    $("#tgAlerts").addClass("ant-tag-hidden");
+    this.state.tagValue2 = "";
+    this.saveAdvance();
   }
   handleCloseSensor() {
-      if (this.state.tagValue3 === "Online") {
+    if (this.state.tagValue3 === "Online") {
       $("#on").removeClass("activeSelectedTag");
-      } else if (this.state.tagValue3 === "Offline") {
+    } else if (this.state.tagValue3 === "Offline") {
       $("#off").removeClass("activeSelectedTag");
     }
-      $("#tgSensor").addClass("ant-tag-hidden");
-      this.state.tagValue3 = "";
+    $("#tgSensor").addClass("ant-tag-hidden");
+    this.state.tagValue3 = "";
+    this.saveAdvance();
   }
   handleCloseSize() {
     if (this.state.tagValue4 === ">=") {
@@ -179,8 +448,9 @@ class AdvancedSearchForm extends Component {
     } else if (this.state.tagValue4 === "=") {
       $("#equalto").removeClass("activeSelectedTag");
     }
-      $("#tgSize").addClass("ant-tag-hidden");
-      this.state.tagValue4 = "";
+    $("#tgSize").addClass("ant-tag-hidden");
+    this.state.tagValue4 = "";
+    this.saveAdvance();
   }
   onChange = (e) => {
     // this.setState({
@@ -189,34 +459,81 @@ class AdvancedSearchForm extends Component {
     console.log(`checked = ${e.target.checked}`);
   };
   render() {
-      const { visible, hideForm, mode, advanceReset } = this.props;
-      if (visible === true && advanceReset === true && this.state.advanceReset===false)
-          this.resetSearch();
-      // console.log("fetchSerachValueeeee", this.props.advanceReset)
-      //if (advanceReset === true) {
-      //        this.state.tagValue="",
-      //        this.state.tagValue1 = "",
-      //        this.state.tagValue2 = "",
-      //        this.state.tagValue3 = "",
-      //        this.state.tagValue4 = "",
-      //        this.state.levelGallonValue = ""              
-      //}
-      //this.props.advanceReset = false;
+    const { visible, hideForm, mode, advanceReset, currentId } = this.props;
+    if (
+      visible === true &&
+      advanceReset === true &&
+      this.state.tempadvanceReset === false
+    )
+      this.resetSearch();
+
+    // console.log("fetchSerachValueeeee", this.props.advanceReset)
+    //if (advanceReset === true) {
+    //        this.state.tagValue="",
+    //        this.state.tagValue1 = "",
+    //        this.state.tagValue2 = "",
+    //        this.state.tagValue3 = "",
+    //        this.state.tagValue4 = "",
+    //        this.state.levelGallonValue = ""
+    //}
+    //this.props.advanceReset = false;
+
     const {
       advancedTab,
-          filterTab,
+      filterTab,
       tagValue,
       tagValue1,
       tagValue2,
       tagValue3,
       tagValue4,
+      temp,
       tagVisible,
       tagVisible1,
       checked,
       sizeValue,
+      tempdata,
+      savedSearches,
+      saveItemArray,
+      renderSaves,
+      disableSearch,
+      serchtxt,
     } = this.state;
     return (
       <div className="advanced_form">
+        {this.state.showPopup === true ? (
+          <Mutation mutation={POST_MUTATION} variables={{ savedSearches }}>
+            {(postMutation) => (
+              <Popup
+                text="Enter Name"
+                closePopup={this.togglePopup.bind(this)}
+                savePopup={this.savetogglePopup.bind(this)}
+                callQuery={postMutation}
+                SearchName={this.getName}
+              />
+            )}
+          </Mutation>
+        ) : null}
+        {this.state.IsSaveSearch === false && (
+          <Query query={userSavedQuery}>
+            {({ data, error, loading }) => {
+              // <>
+              if (loading) {
+                return (
+                  <div>
+                    <Loader />
+                  </div>
+                );
+              }
+              if (loading) return "Loading...";
+              if (error) return `Error!`;
+              if (data) {
+                this.state.temp = data.loggedInUser.savedSearches;
+              }
+              return null;
+            }}
+          </Query>
+        )}
+
         {mode === "advanced" ? (
           <Drawer
             title="Advanced Search"
@@ -232,7 +549,7 @@ class AdvancedSearchForm extends Component {
             />
             <Search
               styleName="advanced_search"
-              value={this.state.serchtxt}
+              value={serchtxt}
               onChange={(e) => this.searchTextfromAdvanceTab(e.target.value)}
             />
 
@@ -248,70 +565,71 @@ class AdvancedSearchForm extends Component {
                 selected={advancedTab === 1}
               />
             </div>
-            <div>
-              {tagValue === "Propane" && (
-                <div className="vertrax-tag">
-                  <Tag
-                    closable
-                    visible={tagVisible}
-                    onClose={() => this.handleClose()}
-                    className="edit-tag"
-                  >
-                    {tagValue}
-                  </Tag>
-                </div>
-              )}
-              {tagValue1 && (
-                <div className="vertrax-tag" id="dvTag_Status">
-                  <Tag
-                    id="tgStatus"
-                    closable
-                    // visible={tagVisible1}
-                    onClose={() => this.handleCloseStatus()}
-                    className="edit-tag"
-                  >
-                    {tagValue1}
-                  </Tag>
-                </div>
-              )}
-              {tagValue2 && (
-                <div className="vertrax-tag" id="dvTag_alerts">
-                  <Tag
-                    id="tgAlerts"
-                    closable
-                    onClose={() => this.handleCloseAlerts()}
-                    className="edit-tag"
-                  >
-                    {tagValue2}
-                  </Tag>
-                </div>
-              )}
-              {tagValue3 && (
-                <div className="vertrax-tag" id="dvTag_sensor">
-                  <Tag
-                    id="tgSensor"
-                    closable
-                    onClose={() => this.handleCloseSensor()}
-                    className="edit-tag"
-                  >
-                    {tagValue3}
-                  </Tag>
-                </div>
-              )}
-              {tagValue4 && (
-                <div className="vertrax-tag" id="dvTag_size">
-                  <Tag
-                    id="tgSize"
-                    closable
-                    onClose={() => this.handleCloseSize()}
-                    className="edit-tag"
-                  >
-                    {tagValue4}
-                  </Tag>
-                </div>
-              )}
-            </div>
-
+            {advancedTab === 0 && (
+              <div>
+                {tagValue === "Propane" && (
+                  <div className="vertrax-tag">
+                    <Tag
+                      closable
+                      visible={tagVisible}
+                      onClose={() => this.handleClose()}
+                      className="edit-tag"
+                    >
+                      {tagValue}
+                    </Tag>
+                  </div>
+                )}
+                {tagValue1 && (
+                  <div className="vertrax-tag" id="dvTag_Status">
+                    <Tag
+                      id="tgStatus"
+                      closable
+                      // visible={tagVisible1}
+                      onClose={() => this.handleCloseStatus()}
+                      className="edit-tag"
+                    >
+                      {tagValue1}
+                    </Tag>
+                  </div>
+                )}
+                {tagValue2 && (
+                  <div className="vertrax-tag" id="dvTag_alerts">
+                    <Tag
+                      id="tgAlerts"
+                      closable
+                      onClose={() => this.handleCloseAlerts()}
+                      className="edit-tag"
+                    >
+                      {tagValue2}
+                    </Tag>
+                  </div>
+                )}
+                {tagValue3 && (
+                  <div className="vertrax-tag" id="dvTag_sensor">
+                    <Tag
+                      id="tgSensor"
+                      closable
+                      onClose={() => this.handleCloseSensor()}
+                      className="edit-tag"
+                    >
+                      {tagValue3}
+                    </Tag>
+                  </div>
+                )}
+                {tagValue4 && (
+                  <div className="vertrax-tag" id="dvTag_size">
+                    <Tag
+                      id="tgSize"
+                      closable
+                      onClose={() => this.handleCloseSize()}
+                      className="edit-tag"
+                    >
+                      {tagValue4}
+                    </Tag>
+                  </div>
+                )}
+              </div>
+            )}
             {advancedTab === 0 && (
               <div className="advanced_wrapper--filters">
                 <div className="advanced_wrapper--inrfilters">
@@ -331,7 +649,7 @@ class AdvancedSearchForm extends Component {
                     selected={filterTab === 2}
                   />
                   <Filters
-                    text="Gateway/Sensors"
+                    text="Sensors"
                     onClick={() => this.changeFilterTab(3)}
                     selected={filterTab === 3}
                   />
@@ -403,8 +721,8 @@ class AdvancedSearchForm extends Component {
                       <FilterChips
                         id="on"
                         text="Online"
-                         onClick={() => this.showTagSensor("Online")}
-                         selected={tagValue3 === "Online"}
+                        onClick={() => this.showTagSensor("Online")}
+                        selected={tagValue3 === "Online"}
                       />
                       <FilterChips
                         id="off"
@@ -419,10 +737,9 @@ class AdvancedSearchForm extends Component {
                       <input
                         className="vertrax__tankInput"
                         type="number"
-                       
                         onChange={(e) =>
                           this.setState({
-                            levelGallonValue: e.target.value,
+                            levelGallonValue: e.target.valueAsNumber,
                           })
                         }
                         placeholder="Enter value for tank size"
@@ -457,26 +774,104 @@ class AdvancedSearchForm extends Component {
                   heading="Saved Searches"
                   contents={[
                     <div className="saved_searches">
-                      <div className="saved_searches--content">
-                        <strong>Campora</strong>
-                        <span>- 3/16 4:52pm</span>
-                      </div>
-                      <div className="saved_searches--content">
-                        <strong>Budget Propane</strong>
-                        <span>- 3/14 2:12pm</span>
-                      </div>
-                      <div className="saved_searches--content">
-                        <strong>Blount Pet</strong>
-                        <span> - 3/13 1:53pm</span>
-                      </div>
-                      <div className="saved_searches--content">
-                        <strong>Collett</strong>
-                        <span> - 3/12 4:11pm</span>
-                      </div>
-                      <div className="saved_searches--content">
-                        <strong>Core Fuels</strong>
-                        <span>- 3/11 11:52am</span>
-                      </div>
+                      {
+                        <Query query={userSavedQuery}>
+                          {({ data, error, loading, refetch }) => {
+                            // <>
+                            //const { listItems } = data;
+                            //console.log("refetch", refetch, "networkStatus", networkStatus)
+
+                            //{
+                            //    (loading || networkStatus === 4)
+
+                            //    ? <div className="loading-items"><p>Loading...</p></div>
+                            //        : < listItems={data} refetch={refetch} />
+
+                            //}
+
+                            if (loading) {
+                              return (
+                                <div>
+                                  <loading />
+                                </div>
+                              );
+                            }
+                            if (loading) return "Loading...";
+                            if (error) return `Error!`;
+                            if (data) {
+                              this.state.renderSaves = Object.values(
+                                data.loggedInUser.savedSearches
+                              );
+                              if (this.state.renderSaves.length > 0)
+                                this.state.renderSaves = Object.values(
+                                  this.state.renderSaves[0]
+                                );
+                              console.log("alerts ", this.state.renderSaves);
+                              // return data && <strong>{data.loggedInUser.savedSearches.searches1.date}</strong>;
+                              // return
+                              // {filterdata.length > 0 ? (
+                              // <Fragment>
+                              // {filterdata.map((item) =>
+                              // )}
+                              // </Fragment>
+                              // ) : (
+                              // ""
+                              // )}
+                              return (
+                                <div>
+                                  {this.state.renderSaves.map(
+                                    (searches, index) => (
+                                      <React.Fragment>
+                                        {/* <div className="saved_searches--content"> */}
+                                        <Button
+                                          size="large"
+                                          type="default"
+                                          className="savedSearch_btn"
+                                          // className="saved_searches--content"
+                                          onClick={refetch()}
+                                          onClickCapture={() => {
+                                            this.searchBySave(
+                                              searches.filter,
+                                              searches.id
+                                            );
+                                          }}
+                                        >
+                                          {searches.name}{" "}
+                                          {moment(searches.date).format(
+                                            "YYYY-MM-DD"
+                                          )}
+                                        </Button>
+                                        {/* </div> */}
+                                      </React.Fragment>
+                                    )
+                                  )}
+                                  {this.state.renderSaves.length == 0 && (
+                                    <div className="saveNotFound">
+                                      No searches found
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                          }}
+                        </Query>
+                      }
+
+                      {/*
+                           * 
+                             
+                              <div className="saved_searches--content">
+                                  <strong>Blount Pet</strong>
+                                  <span> - 3/13 1:53pm</span>
+                              </div>
+                              <div className="saved_searches--content">
+                                  <strong>Collett</strong>
+                                  <span> - 3/12 4:11pm</span>
+                              </div>
+                              <div className="saved_searches--content">
+                                  <strong>Core Fuels</strong>
+                                  <span>- 3/11 11:52am</span>
+                              </div>*/}
                     </div>,
                   ]}
                 />
@@ -498,30 +893,43 @@ class AdvancedSearchForm extends Component {
                 />
               </div>
             )}
-            <div className="filter__saveBtn">
-              <Button
-                className="saved_btn"
-                size="large"
-                // class="ant-btn saved_btn ant-btn-lg"
-                onClick={this.callfetchValue.bind(this)}
-              >
-                Search{" "}
-              </Button>
-              <Button
-                icon={
-                  <img
-                    className="btn_icons filter_saveImg"
-                    src={save}
-                    alt="save"
-                  />
-                }
-                size="large"
-                className="saved_btn"
-                onClick={this.SavingAdvanceSearch.bind(this)}
-              >
-                Save
-              </Button>
-            </div>
+            {advancedTab === 0 && (
+              <div className="filter__saveBtn">
+                <Button
+                  disabled={disableSearch}
+                  className="saved_btn"
+                  size="large"
+                  // class="ant-btn saved_btn ant-btn-lg"
+                >
+                  Reset{" "}
+                </Button>
+                <Button
+                  disabled={disableSearch}
+                  className="saved_btn"
+                  size="large"
+                  // class="ant-btn saved_btn ant-btn-lg"
+                  onClick={this.callfetchValue.bind(this)}
+                >
+                  Search{" "}
+                </Button>
+
+                <Button
+                  icon={
+                    <img
+                      className="btn_icons filter_saveImg"
+                      src={save}
+                      alt="save"
+                    />
+                  }
+                  size="large"
+                  className="saved_btn"
+                  onClick={this.togglePopup.bind(this)}
+                  disabled={disableSearch}
+                >
+                  Save{" "}
+                </Button>
+              </div>
+            )}
           </Drawer>
         ) : (
           <Drawer
@@ -650,7 +1058,7 @@ class AdvancedSearchForm extends Component {
                 // className="client_export--btn"
                 // onClick={this.SavingAdvanceSearch.bind(this)}
               >
-                Save
+                View
               </Button>
             </div>
           </Drawer>

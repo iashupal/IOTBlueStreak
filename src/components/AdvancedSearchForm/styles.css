@@ -72,6 +72,32 @@ Button.ant-btn-lg.customize--saved_btn {
   font-size: 12px;
   color: var(--color-eclipse);
   letter-spacing: 1px;
+  cursor: pointer;
+}
+Button.ant-btn-lg.savedSearch_btn {
+  width: 100%;
+  height: 100%;
+  margin: 5px auto;
+  position: relative;
+  border: 1px solid var(--color-greyiesh);
+  border-radius: 5px;
+  padding: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-eclipse);
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.savedSearch_btn.ant-btn:not([disabled]):hover,
+.savedSearch_btn.ant-btn:not([disabled]):focus {
+  background-color: var(--color-orange);
+  color: var(--color-white);
+}
+.saveNotFound {
+  width: 100%;
+  margin: 5px auto;
+  position: relative;
+  text-align: center;
 }
 .saved_searches--content span {
   font-style: italic;
@@ -123,7 +149,7 @@ Button.ant-btn-lg.customize--saved_btn {
   width: 100%;
   display: grid;
   grid-template-rows: 1fr;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   grid-gap: 10px;
 }
 .btn_icons.filter_saveImg {
@@ -165,4 +191,42 @@ Button.ant-btn-lg.customize--saved_btn {
   border-radius: 4px;
   color: var(--color-eclipse);
   font-size: 14px;
+}
+.popup {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.popup_inner {
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  top: 25%;
+  bottom: 25%;
+  margin: auto;
+  background: white;
+  width: 30%;
+  height: 30%;
+  padding: 20px;
+  border-radius: 10px;
+}
+.popup_inner h2 {
+  color: var(--color-primary);
+}
+.popup_btn.ant-btn-primary {
+  border-radius: 4px;
+  margin-top: 15px;
+  background-color: var(--color-primary);
+}
+.popup_closebtn {
+  margin-right: 10px;
+  margin-top: 15px;
 }

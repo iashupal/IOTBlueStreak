@@ -1,5 +1,7 @@
 import React, { Component, Fragment } from "react";
-import { Link } from "react-router-dom";
+import moment from "moment";
+import { Link, withRouter } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import Header from "../components/Header";
 import ClientHistoryTable from "../components/ClientHistoryTable";
 import AdvancedSearchForm from "../components/AdvancedSearchForm";
@@ -12,6 +14,7 @@ import dropBlue from "../assets/images/drop-blue.png";
 import triangleRed from "../assets/images/triangle-red.png";
 import Loader from "../components/Loader";
 import wifiGrey from "../assets/images/wifi-grey.png";
+import wifiGreen from "../assets/images/wifi-green.png";
 import "./styles.css";
 import { gql } from "apollo-boost";
 import { graphql } from "react-apollo";
@@ -108,10 +111,19 @@ class ClientLayout extends Component {
       endDate: "",
       oneDay: "",
       newCurrentDate: "",
+      clearGraph: false,
+      // showBack: location.hash.split("?")[0] !== "#/",
     };
     this.showForm = this.showForm.bind(this);
     this.hideForm = this.hideForm.bind(this);
+    this.handleBack = this.handleBack.bind(this);
+    // this.hook = hashHistory.listenBefore((loc) =>
+    //   this.setState({ showBack: loc.pathname !== "/" })
+    // );
   }
+  // componentWillUnmount() {
+  //   this.hook(); //unlisten
+  // }
   showForm() {
     this.setState({
       formVisible: true,
@@ -129,6 +141,9 @@ class ClientLayout extends Component {
     this.setState({ startDate: startDate });
     this.setState({ endDate: endDate });
   };
+  handleBack() {
+    this.props.history.goBack();
+  }
   render() {
     console.log("line to client newCurrentDate", this.state.newCurrentDate);
     let { data } = this.props;
@@ -144,6 +159,7 @@ class ClientLayout extends Component {
     console.log("tank specific detail", data);
     console.log("id", this.props.match.params.id);
     // console.log("desc", data.tank.description);
+    console.log("triggeredat", data.tank.alarms[3].triggeredAt);
     const {
       formVisible,
       description,
@@ -154,6 +170,7 @@ class ClientLayout extends Component {
       filterChildData,
       startDate,
       endDate,
+      clearGraph,
     } = this.state;
     return (
       <Fragment>
@@ -168,10 +185,8 @@ class ClientLayout extends Component {
           <div className="client_wrapper">
             {/* section 1 */}
             <div className="client_top--content">
-              <div className="client_left--content">
-                <Link to="/">
-                  <img className="hide_form" src={arrowLeft} alt="back_arrow" />
-                </Link>
+              <div className="client_left--content" onClick={this.handleBack}>
+                <img className="hide_form" src={arrowLeft} alt="back_arrow" />
                 <p>
                   {data.tank
                     ? data.tank.parent
@@ -179,7 +194,9 @@ class ClientLayout extends Component {
                       : ""
                     : ""}
                 </p>
+                {/* </Link> */}
               </div>
+              {/* )} */}
               <div className="client_right--content">
                 {/* <Search
                   saveIcon
@@ -340,7 +357,11 @@ class ClientLayout extends Component {
                           ? data.tank.latestReading
                             ? data.tank.latestReading.levelGallons === null
                               ? "0"
-                              : data.tank.latestReading.levelGallons + " " + "G"
+                              : Math.round(
+                                  data.tank.latestReading.levelGallons
+                                ) +
+                                " " +
+                                "G"
                             : "0"
                           : 0
                       }
@@ -353,7 +374,9 @@ class ClientLayout extends Component {
                             ? data.tank.latestReading.refillPotentialGallons ===
                               null
                               ? "0"
-                              : data.tank.latestReading.refillPotentialGallons +
+                              : Math.round(
+                                  data.tank.latestReading.refillPotentialGallons
+                                ) +
                                 " " +
                                 "G"
                             : "0"
@@ -374,11 +397,11 @@ class ClientLayout extends Component {
                             ? data.tank.latestReading.temperatureCelsius ===
                               null
                               ? "0"
-                              : Math.round(
+                              : (
                                   data.tank.latestReading.temperatureCelsius *
                                     1.8 +
-                                    32
-                                ) +
+                                  32
+                                ).toFixed(1) +
                                 " " +
                                 "F"
                             : "0"
@@ -407,25 +430,61 @@ class ClientLayout extends Component {
                   <div className="client_top--alerts">
                     <h3>Most Recent Alert</h3>
                     <div className="client_alerts--detailedData">
-                      <ContentCard
-                        styleName="card_alertred card_popover"
-                        contents={[
-                          <div className="alerts top_alerts">
-                            <img
-                              style={{ width: 18 }}
-                              src={wifiGrey}
-                              alt="download"
-                            />
-                            <p> - OFFLINE</p>
-                            <img
-                              className="alert_redtriangle"
-                              src={triangleRed}
-                              alt="triangle"
-                            />
-                          </div>,
-                        ]}
-                      />
-                      <p className="alert_time">3/15/20 - 3:30pm</p>
+                      {data.tank.alarms.alarmType ===
+                        "sensorMissedReportsAlarm" &&
+                      data.tank.alarms.alarming === true ? (
+                        <ContentCard
+                          styleName="card_online card_popover"
+                          contents={[
+                            <div className="alerts top_alerts">
+                              <img
+                                style={{ width: 18 }}
+                                src={wifiGreen}
+                                alt="download"
+                              />
+
+                              <p> - ONLINE</p>
+
+                              {/* <img
+                                className="alert_redtriangle"
+                                src={triangleRed}
+                                alt="triangle"
+                              /> */}
+                            </div>,
+                          ]}
+                        />
+                      ) : (
+                        <ContentCard
+                          styleName="card_alertred card_popover"
+                          contents={[
+                            <div className="alerts top_alerts">
+                              <img
+                                style={{ width: 18 }}
+                                src={wifiGrey}
+                                alt="download"
+                              />
+
+                              <p> - OFFLINE</p>
+
+                              <img
+                                className="alert_redtriangle"
+                                src={triangleRed}
+                                alt="triangle"
+                              />
+                            </div>,
+                          ]}
+                        />
+                      )}
+                      <p className="alert_time">
+                        {data.tank.alarms.alarmType ===
+                        "sensorMissedReportsAlarm"
+                          ? ""
+                          : moment
+                              .utc(data.tank.alarms[3].triggeredAt)
+                              .format("YYYY-MM-DD HH:mm")}
+
+                        {/* 3/15/20 - 3:30pm */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -436,6 +495,8 @@ class ClientLayout extends Component {
                   passFilteredData={filterChildData}
                   startDate={startDate}
                   endDate={endDate}
+                  clearGraph={clearGraph}
+                  clearGraphFilter={() => this.setState({ clearGraph: false })}
                 />
               </div>
             </div>
@@ -444,6 +505,7 @@ class ClientLayout extends Component {
               <ClientHistoryTable
                 selectedTankId={selectid}
                 updateParent={this.handleChildClientHistory}
+                clearGraph={() => this.setState({ clearGraph: true })}
               />
             </div>
           </div>

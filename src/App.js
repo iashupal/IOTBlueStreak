@@ -112,7 +112,8 @@ const amplifyConfig = {
   },
   Auth: {
     userPoolId: process.env.REACT_APP_USER_POOL_ID || "us-west-2_wtUQhInp3",
-    userPoolWebClientId: process.env.REACT_APP_WEB_CLIENT_ID || "5fqur9aivpak9bo3k7bq5ol6pe",
+    userPoolWebClientId:
+      process.env.REACT_APP_WEB_CLIENT_ID || "5fqur9aivpak9bo3k7bq5ol6pe",
   },
   // Auth: {
   //   UserPoolId: "us-east-1_flvAAhvx4",
@@ -121,7 +122,8 @@ const amplifyConfig = {
 };
 
 Amplify.configure(amplifyConfig);
-const GQL_ENDPOINT = process.env.REACT_APP_GQL_ENDPOINT || 
+const GQL_ENDPOINT =
+  process.env.REACT_APP_GQL_ENDPOINT ||
   "https://khoz9u3frf.execute-api.us-west-2.amazonaws.com/stage/graphql";
 
 const cache = new InMemoryCache();

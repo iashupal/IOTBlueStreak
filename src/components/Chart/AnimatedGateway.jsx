@@ -22,7 +22,13 @@ class AnimatedGateway extends React.Component {
       percntgStatus1,
       percntgStatus,
       onlineGateway,
+      pathColor,
+      strokeColor,
+      trailColor,
+      strokeDashoffset,
+      count,
     } = this.props;
+    console.log("pathcolor", pathColor);
     return (
       <Animate
         start={() => ({
@@ -40,11 +46,17 @@ class AnimatedGateway extends React.Component {
           const roundedPercentage = Math.round(percentage);
           // const lostPer = 100 - roundedPercentage;
           return (
-            <Graph percentage={roundedPercentage}>
+            <Graph
+              percentage={roundedPercentage}
+              mainStrokeStyle={strokeColor}
+              trailColor={trailColor}
+              pathColor={pathColor}
+              strokeDashoffset={strokeDashoffset}
+            >
               <div className="graph_content">
                 <div className="graph_value" style={{ height: "3em" }}>
                   <img src={image} alt="logo" />
-                  <h3>{roundedPercentage}</h3>
+                  <h3>{count}</h3>
                 </div>
                 <p className="graph_status">
                   <strong>{percntgStatus}</strong>
