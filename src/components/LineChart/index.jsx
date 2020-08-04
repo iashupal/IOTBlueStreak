@@ -42,17 +42,9 @@ const lineGraph = gql`
 const today = new Date();
 const todaysDate = new Date();
 const last30days = new Date(today.setDate(today.getDate() - 30));
-var daysInMonth = [];
-
-var monthDate = moment().startOf(todaysDate);
-
-_.times(monthDate.daysInMonth(), function (n) {
-  daysInMonth.push(monthDate.format("YYYY-MM-DD"));
-  monthDate.subtract(1, "day");
-});
 
 function LineChart(props) {
-  const [xAxisData, setXAxisData] = useState(daysInMonth.slice(0, -1));
+  const [xAxisData, setXAxisData] = useState([]);
   const [yAxisData, setYAxisData] = useState([]);
   const [options, setOptions] = useState({
     chart: {
@@ -64,7 +56,6 @@ function LineChart(props) {
     xAxis: [
       {
         categories: xAxisData,
-        // tickInterval: 7 * 24 * 3600 * 1000,
         type: "datetime",
         title: {
           enabled: false,
@@ -146,7 +137,7 @@ function LineChart(props) {
     getData({
       variables: {
         id: props.selectedTankId,
-        first: 1000,
+        first: 500,
         fromdate: previousDate,
         todate: currentDate,
       },
@@ -164,32 +155,15 @@ function LineChart(props) {
       setLoading(false);
       const xData = [];
       const yData = [];
-      const xFilterData = [];
-      var Xresult = 0;
-      console.log("Previous Value", data.tank.readings.edges);
       data.tank.readings.edges.map((item) => {
-        if (
-          !xFilterData.includes(
-            moment(item.node.timestamp).format("YYYY-MM-DD")
-          )
-        ) {
-          console.log("After removing the duplicate element", xFilterData);
-          if (Xresult % 7 == 0) {
-            xData.push(moment(item.node.timestamp).format("YYYY-MM-DD"));
-            yData.push(item.node.levelPercent);
-          }
-          xFilterData.push(moment(item.node.timestamp).format("YYYY-MM-DD"));
-          Xresult = Xresult + 1;
-        }
-        // xData.push(moment(item.node.timestamp).format("YYYY-MM-DD"));
+        xData.push(moment(item.node.timestamp).format("YYYY-MM-DD"));
+        yData.push(item.node.levelPercent);
       });
-      console.log(xData);
       setXAxisData([...xData]);
       setYAxisData([...yData]);
       const updatedOptions = { ...options };
       updatedOptions.xAxis[0].categories = xData;
       updatedOptions.series[0].data = yData;
-      console.log("updatedOption", updatedOptions);
       setOptions({ ...updatedOptions });
     }
   }, [data]);
